@@ -119,3 +119,21 @@ h2 { margin: 0; font-size: 18px; line-height: 1.35; font-weight: 600; }
 .scrim { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .dialog { background: var(--surface); border-radius: var(--radius-card); padding: 24px; max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
 textarea.input { height: auto; padding: 10px 14px; font-family: var(--font-sans); line-height: 1.5; }
+
+/* Session */
+.stepper { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.stepper li { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+.stepper .dot { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-input); display: inline-flex; align-items: center; justify-content: center; font: 500 12px var(--font-mono); }
+.stepper .done .dot { background: var(--success); border-color: var(--success); color: #fff; }
+.stepper .current { color: var(--text); font-weight: 600; } .stepper .current .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+.msg { display: flex; flex-direction: column; gap: 8px; }
+.msg.user { background: var(--surface-sunken); }
+.msg .who { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.msg p { margin: 0; white-space: pre-wrap; }
+.outside { background: var(--warning-soft); color: var(--warning); padding: 0 6px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 13px; }
+.locked { border: 1.5px dashed var(--border-input); border-radius: var(--radius-card); padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.timer { font: 500 24px var(--font-mono); }
+.timer.over { color: var(--danger); }
+.bigtext { width: 100%; min-height: 220px; font: 400 14px/1.6 var(--font-mono); padding: 12px 14px; border: 1px solid var(--border-input); border-radius: var(--radius); resize: vertical; }
+.mark { background: var(--highlight); }
+button.cite { border: 0; cursor: pointer; }

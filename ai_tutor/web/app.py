@@ -12,10 +12,12 @@ from ..config import paths as default_paths
 from ..embeddings import get_embedder
 from ..home import home_state
 from ..llm.client import LLMClient
+from ..session import utcnow as session_clock
 from ..store.conn import open_db
 from ..worker import Worker
 from .library_api import router as library_router
 from .projects_api import router as projects_router
+from .sessions_api import router as sessions_router
 from .skills_api import router as skills_router
 
 
@@ -33,6 +35,7 @@ def create_app(
     embedder: Callable[[], object | None] = get_embedder,
     llm_client: Callable[[int], LLMClient | None] | None = None,
     resume: bool = True,
+    clock: Callable[[], object] = session_clock,
 ) -> FastAPI:
     """`check_kwargs`, `verify_llm`, `embedder` and `llm_client` let tests replace the network, the installed tools and the models."""
     kw = dict(check_kwargs or {})
@@ -41,6 +44,7 @@ def create_app(
     async def lifespan(app: FastAPI):
         p = (data_paths or default_paths()).ensure()
         app.state.paths = p
+        app.state.clock = clock
         app.state.db = open_db(p.db)
         app.state.embedder = embedder
         app.state.llm_factory = llm_client or (lambda sid: LLMClient.for_job("triage") if app_settings.llm_config() else None)
@@ -55,6 +59,7 @@ def create_app(
     app.include_router(library_router)
     app.include_router(skills_router)
     app.include_router(projects_router)
+    app.include_router(sessions_router)
 
     def status(verify: bool) -> dict:
         return setup_check.summarize(setup_check.check_dependencies(verify=verify, verify_llm=verify_llm, **kw))

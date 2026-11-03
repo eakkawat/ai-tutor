@@ -105,8 +105,10 @@ class SmartBackend:
     """Answers by job. `skills(label, ids, existing)` -> list of skill dicts; `concepts(names, ids)` -> list of concept dicts;
     `merge(existing, candidate)` -> dict. `fail_on` = a job name that raises once (to test retry)."""
 
-    def __init__(self, *, triage=TRIAGE_OK, skills=None, concepts=None, merge=None, recommend=None, fail_on=None):
+    def __init__(self, *, triage=TRIAGE_OK, skills=None, concepts=None, merge=None, recommend=None, fail_on=None, session=None):
         import collections
+        self.session = session or {}
+        self.users = []
         self.triage, self.skills, self.concepts, self.merge, self.recommend = triage, skills or (lambda *a: []), concepts, merge, recommend
         self.calls, self.fail_on, self.labels = collections.Counter(), fail_on, []
 
@@ -133,11 +135,36 @@ class SmartBackend:
             job = "skill_recommendation"
             listed = [(int(i), n) for i, n in re.findall(r"^- id (\d+): (.+?):", user, re.MULTILINE)]
             out = json.dumps((self.recommend or (lambda listed, user: {"picks": []}))(listed, user))
+        elif "## Phase: Diagnose, reading the learner" in user:
+            job, out = "diagnose_eval", self._session("diagnose_eval", user)
+        elif "## Phase: Diagnose\n" in user:
+            job, out = "diagnose", self._session("diagnose", user)
+        elif "## Phase: Learn just enough" in user:
+            job, out = "teach", self._session("teach", user)
+        elif "## Phase: Practice\n" in user:
+            job, out = "practice_task", self._session("practice_task", user)
+        elif "A question from the learner" in user:
+            job, out = "qa", self._session("qa", user)
         else:
             raise AssertionError(f"unknown job: {user[:80]}")
+        self.users.append(user)
         self.calls[job] += 1
         if self.fail_on == job:
             self.fail_on = None
             from ai_tutor.llm.errors import LLMPausedError
             raise LLMPausedError("down")
         return Completion(text=out, prompt_tokens=1, completion_tokens=1, finish_reason="stop")
+
+
+    def _session(self, job, user):
+        import json
+        h = self.session.get(job)
+        cites = re.findall(r"^CITATION: (.+)$", user, re.MULTILINE)
+        if callable(h):
+            h = h(user, cites)
+        return h if isinstance(h, str) else json.dumps(h)
+
+
+def words(n: int, cite: str = "") -> str:
+    """n words of filler, ending with a citation (the citation counts as words too, so n is approximate)."""
+    return " ".join(["word"] * n) + (f" {cite}" if cite else "")

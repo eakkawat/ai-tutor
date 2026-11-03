@@ -9,6 +9,7 @@ import Setup from "./pages/Setup";
 import Soon from "./pages/Soon";
 import SkillMap from "./pages/SkillMap";
 import SkillReview from "./pages/SkillReview";
+import Session from "./pages/Session";
 import Source from "./pages/Source";
 
 const TABS = [
@@ -50,7 +51,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/new" element={<Picker />} />
         <Route path="/project/new" element={<ProjectForm />} />
-        <Route path="/session/:id" element={<Soon title="Session" />} />
+        <Route path="/session/:id" element={<Session />} />
         <Route path="/library" element={<Library />} />
         <Route path="/source/:chunkId" element={<Source />} />
         <Route path="/skills" element={<SkillMap />} />

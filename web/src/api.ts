@@ -30,6 +30,23 @@ export type PickCard = {
 export type Shortlist = { project: Project; skills: PickCard[]; ranked_by: "tutor" | "similarity"; note: string | null; all_passed: boolean; total_available: number };
 export type ActiveSkill = { id: number; name: string; hours: number; attempt_next: number; session_id: number | null; phase: string | null };
 
+export type SessionPhase = "diagnose" | "learn" | "check" | "practice" | "feedback" | "revise" | "pass";
+export type Msg = {
+  id: number; role: "tutor" | "user"; kind: string | null; phase: SessionPhase | null; content: string;
+  citations: { citation: string; chunk_id: number }[]; meta: Record<string, unknown>; at: string;
+};
+export type PracticeTask = { title: string; instructions: string; support: string | null; template: string[]; minutes: number; attempt: number };
+export type Gate = { unlocked: boolean; done: number; total: number; message: string | null; missing: { id: number; name: string; level: string }[]; concepts: { id: number; name: string; level: string }[] };
+export type SessionView = {
+  id: number; phase: SessionPhase; ended: boolean; attempt: number; next_attempt: number;
+  skill: { id: number; name: string; description: string; principles: Principle[]; concepts: { id: number; name: string }[] };
+  project: { id: number; name: string; minutes_per_session: number };
+  difficulty: number; hours: number; task: PracticeTask | null; draft: string;
+  timer: { limit_s: number; elapsed_s: number; running: boolean; left_s: number | null; overtime_s: number };
+  diagnosis: { can_do: string; gap: string; level: number; meets_all: boolean } | null;
+  gate: Gate; messages: Msg[]; allowed: string[];
+};
+
 export type Triage = { book_type: string; domain?: string; practicable: boolean; likely_skills: string[]; reason: string };
 export type SourceStatus = "processing" | "ready" | "reference_only" | "needs_ocr" | "error" | "cancelled" | "new";
 export type Source = {
@@ -44,7 +61,7 @@ export type Passage = {
 };
 
 export class ApiError extends Error {
-  constructor(message: string, public field?: string) { super(message); }
+  constructor(message: string, public field?: string, public retryable = false) { super(message); }
 }
 
 async function upload({ files, title, author }: { files: File[]; title?: string; author?: string }): Promise<{ id: number; skipped: string[] }> {
@@ -65,7 +82,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
     const d = body.detail;
-    throw new ApiError(typeof d === "string" ? d : d?.message ?? `Request failed (${r.status})`, d?.field ?? d?.code);
+    throw new ApiError(typeof d === "string" ? d : d?.message ?? `Request failed (${r.status})`, d?.field ?? d?.code, d?.retryable === true);
   }
   return (r.status === 204 ? undefined : await r.json()) as T;
 }
@@ -99,5 +116,10 @@ export const api = {
   activeSkill: () => call<{ active: ActiveSkill | null }>("/api/active-skill"),
   startSkill: (skillId: number, projectId: number, pause = false) =>
     call<{ session_id: number; skill_id: number; phase: string }>(`/api/skills/${skillId}/start`, { method: "POST", body: JSON.stringify({ project_id: projectId, pause_current: pause }) }),
+  session: (id: number) => call<SessionView>(`/api/sessions/${id}`),
+  act: (id: number, action: string, text = "") => call<SessionView>(`/api/sessions/${id}/act`, { method: "POST", body: JSON.stringify({ action, text }) }),
+  saveDraft: (id: number, text: string) => call<{ ok: true }>(`/api/sessions/${id}/draft`, { method: "PUT", body: JSON.stringify({ text }) }),
+  nextSkill: (id: number) => call<{ next: PickCard | null; note: string | null; all_passed: boolean }>(`/api/sessions/${id}/next`),
+  feltWrong: (messageId: number, note: string) => call<{ ok: true }>(`/api/messages/${messageId}/felt-wrong`, { method: "POST", body: JSON.stringify({ note }) }),
   passage: (id: number) => call<Passage>(`/api/chunks/${id}`),
 };
