@@ -17,7 +17,7 @@ const view = (o: Partial<SessionView> = {}): SessionView => ({
   skill: { id: 1, name: "Compose a frame", description: "d", principles, concepts: [] }, project: { id: 1, name: "Grandma's Kitchen", minutes_per_session: 25 },
   difficulty: 3, hours: 1, task, draft: "", timer: { limit_s: 1200, elapsed_s: 0, running: true, left_s: 1200, overtime_s: 0 }, diagnosis: null,
   gate: { unlocked: true, done: 0, total: 0, message: null, missing: [], concepts: [] }, messages: [], allowed: ["submit", "ask", "heartbeat", "pause_timer", "resume_timer"],
-  assets: [], check: null, feedback_pending: false, feedback_error: null, route: null, route_concepts: [], ...o,
+  assets: [], flow: { level: 3, supports: ["template"], constraints: [], hours: 1, early: true, success_rate: null, target: [0.7, 0.85], can_rate: false, rating: null }, check: null, feedback_pending: false, feedback_error: null, route: null, route_concepts: [], ...o,
 });
 
 type Handler = (url: string, init?: RequestInit) => unknown;
@@ -126,7 +126,7 @@ describe("Attachments", () => {
   });
 
   it("lets you submit with only a picture, no text", async () => {
-    const f = mock(server(() => view({ assets: [asset()] }), (u, init) => (u === "/api/sessions/1/act" ? view({ phase: "feedback", attempt: 1, feedback_pending: true }) : undefined)));
+    const f = mock(server(() => view({ assets: [asset()] }), (u) => (u === "/api/sessions/1/act" ? view({ phase: "feedback", attempt: 1, feedback_pending: true }) : undefined)));
     wrap();
     const submit = await screen.findByRole("button", { name: "Submit attempt 1" });
     expect(submit).toBeEnabled();

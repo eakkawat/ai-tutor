@@ -19,7 +19,7 @@ const view = (o: Partial<SessionView> = {}): SessionView => ({
   gate: { unlocked: false, done: 0, total: 2, message: "Practice unlocks when all 2 concepts reach Spot. 0 of 2 done. Missing: obstacle, want.", missing: [],
     concepts: [{ id: 1, name: "want", level: "none" }, { id: 2, name: "obstacle", level: "define" }] },
   messages: [], allowed: ["begin", "answer", "advance", "ask", "pause_timer", "resume_timer", "heartbeat"],
-  assets: [], check: null, feedback_pending: false, feedback_error: null, route: null, route_concepts: [], ...o,
+  assets: [], flow: { level: 3, supports: ["template"], constraints: [], hours: 1, early: true, success_rate: null, target: [0.7, 0.85], can_rate: false, rating: null }, check: null, feedback_pending: false, feedback_error: null, route: null, route_concepts: [], ...o,
 });
 const task = { title: "Rewrite the kitchen scene", instructions: "Mai wants the recipe tin.", support: "beat template", template: ["Show the want", "First block"], minutes: 20, attempt: 1 };
 

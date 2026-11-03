@@ -35,7 +35,16 @@ export type Msg = {
   id: number; role: "tutor" | "user"; kind: string | null; phase: SessionPhase | null; content: string;
   citations: { citation: string; chunk_id: number }[]; meta: Record<string, unknown>; at: string;
 };
-export type PracticeTask = { title: string; instructions: string; support: string | null; template: string[]; minutes: number; attempt: number };
+export type TaskExtras = { template?: string[]; worked_example?: string; hint?: string; split_steps?: string[]; smaller_scope?: string; constraint?: string; higher_standard?: string; combine?: string };
+export type PracticeTask = { title: string; instructions: string; support: string | null; template: string[]; minutes: number; attempt: number; extras?: TaskExtras; base_minutes?: number };
+export type FlowRating = {
+  id: number; rating: "too_easy" | "just_right" | "too_hard"; tapped: string | null; inferred: boolean; classification: string; lever: string | null; lever_label: string | null;
+  level_before: number; level_after: number; message: string; verdict: string;
+};
+export type FlowView = {
+  level: number; supports: string[]; constraints: string[]; hours: number; early: boolean; success_rate: number | null; target: [number, number];
+  can_rate: boolean; rating: FlowRating | null;
+};
 export type Gate = { unlocked: boolean; done: number; total: number; message: string | null; missing: { id: number; name: string; level: string }[]; concepts: { id: number; name: string; level: string }[] };
 export type SessionView = {
   id: number; phase: SessionPhase; ended: boolean; attempt: number; next_attempt: number;
@@ -46,7 +55,7 @@ export type SessionView = {
   diagnosis: { can_do: string; gap: string; level: number; meets_all: boolean } | null;
   gate: Gate; messages: Msg[]; allowed: string[];
   check: { current: CheckQuestion | null; remaining_minutes: number; budget_left: number; all_done: boolean } | null;
-  assets: Asset[]; feedback_pending: boolean; feedback_error: string | null; route: "pass" | "reteach" | "revise" | null; route_concepts: string[];
+  assets: Asset[]; flow: FlowView; feedback_pending: boolean; feedback_error: string | null; route: "pass" | "reteach" | "revise" | null; route_concepts: string[];
 };
 export type Asset = {
   id: number; kind: "image" | "video"; filename: string; status: "processing" | "ready" | "error"; error: string | null; duration_s: number | null;
@@ -152,6 +161,8 @@ export const api = {
   act: (id: number, action: string, text = "") => call<SessionView>(`/api/sessions/${id}/act`, { method: "POST", body: JSON.stringify({ action, text }) }),
   saveDraft: (id: number, text: string) => call<{ ok: true }>(`/api/sessions/${id}/draft`, { method: "PUT", body: JSON.stringify({ text }) }),
   compare: (id: number, a: number, b: number) => call<Compare>(`/api/sessions/${id}/compare?a=${a}&b=${b}`),
+  rate: (id: number, rating: string, cantStart = false) =>
+    call<SessionView>(`/api/sessions/${id}/rating`, { method: "POST", body: JSON.stringify({ rating, cant_start: cantStart }) }),
   uploadAsset,
   removeAsset: (id: number) => call<{ ok: true }>(`/api/assets/${id}`, { method: "DELETE" }),
   retryAsset: (id: number) => call<{ ok: true }>(`/api/assets/${id}/retry`, { method: "POST" }),

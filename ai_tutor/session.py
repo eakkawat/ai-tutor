@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 from . import assets as assetlib
 from . import check as chk
 from . import feedback as fbk
+from . import flow
 from . import skills as sk
 from .citations import cite
 from .embeddings import Embedder
@@ -117,7 +118,7 @@ class SessionService:
             "difficulty": ls["difficulty_current"] if ls else 3, "hours": round(ls["hours_total"], 2) if ls else 0.0,
             "task": json.loads(r["task_json"]) if r["task_json"] else None, "draft": r["draft_text"], "timer": self.timer(r),
             "diagnosis": json.loads(r["diagnosis_json"]) if r["diagnosis_json"] else None,
-            "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs, "assets": assetlib.draft_assets(self.db, session_id), **self._extras(r, msgs),
+            "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs, "assets": assetlib.draft_assets(self.db, session_id), "flow": self._flow_view(r), **self._extras(r, msgs),
             "allowed": sorted(ALLOWED[r["phase"]] | ANYTIME) if not r["ended_at"] else ["ask"],
         }
 
@@ -269,8 +270,9 @@ class SessionService:
         if r["task_json"]:
             return json.loads(r["task_json"])
         from .teaching import make_practice_task
-        ls = self.db.execute("SELECT difficulty_current FROM learner_skill WHERE skill_id = ?", (r["skill_id"],)).fetchone()
-        task = make_practice_task(self.ctx(r), r["attempt"] + 1, ls["difficulty_current"] if ls else 3)
+        level, state = flow.skill_state(self.db, r["skill_id"])
+        hours = self.db.execute("SELECT hours_total FROM learner_skill WHERE skill_id = ?", (r["skill_id"],)).fetchone()
+        task = make_practice_task(self.ctx(r), r["attempt"] + 1, level, state, hours["hours_total"] if hours else 0.0)
         self.db.execute("UPDATE session SET task_json = ? WHERE id = ?", (json.dumps(task), r["id"]))
         self.db.commit()
         return task
@@ -387,6 +389,8 @@ class SessionService:
         if pending:
             names = ", ".join(sorted({m["concept"] for m in pending}))
             raise TransitionError(f"A concept needs another look before your next attempt: {names}. Re-teach it first.")
+        self._ensure_rated(r, fb)
+        r = self.row(r["id"])
         task = self._ensure_task(r)
         now = iso(self.clock())
         self.db.execute("UPDATE session SET phase = 'revise', timer_limit_s = ?, timer_elapsed_s = 0, timer_since = ?, timer_seen = ? WHERE id = ?",
@@ -398,6 +402,8 @@ class SessionService:
         mistakes = self._concept_mistakes(self._latest_feedback(r["id"]))
         if not mistakes:
             raise TransitionError("No concept needs re-teaching. Revise your work instead.")
+        self._ensure_rated(r, self._latest_feedback(r["id"]))
+        r = self.row(r["id"])
         ctx = self.ctx(r)
         picked: dict[int, dict] = {}
         for m in mistakes:
@@ -417,7 +423,64 @@ class SessionService:
         fb = self._latest_feedback(r["id"])
         if fb is None or not fb["passed"]:
             raise TransitionError("Not passed yet: every principle must be followed.")
+        self._ensure_rated(r, fb)
         self._complete(r)
+
+    # --- flow calibration (E1 to E3)
+    def rate(self, session_id: int, rating: str, cant_start: bool = False) -> dict:
+        """The learner's tap after a task. Decides what, if anything, changes for the next attempt, and says so in one line."""
+        r = self.row(session_id)
+        if r["ended_at"] or r["phase"] != "feedback":
+            raise TransitionError("You can rate a task right after its feedback.")
+        sub, fb = self._latest_submission(session_id), self._latest_feedback(session_id)
+        if sub is None or fb is None or fb["submission_id"] != sub["id"]:
+            raise TransitionError("Feedback has not been given yet.")
+        if rating not in ("too_easy", "just_right", "too_hard"):
+            raise TransitionError("Choose Too easy, Just right or Too hard.")
+        if flow.rating_for_feedback(self.db, fb["id"]):
+            raise TransitionError("You already rated this task.")
+        self._apply_rating(r, fb, rating, tapped=rating, inferred=False, cant_start=cant_start and rating == "too_hard")
+        return self.view(session_id)
+
+    def _ensure_rated(self, r, fb) -> None:
+        """Moving on without a tap: judge from the work and record it as inferred. Best effort: it never blocks the learner."""
+        if fb is None or flow.rating_for_feedback(self.db, fb["id"]):
+            return
+        used = flow.infer_rating(flow.collect(self.db, fb["id"]))
+        try:
+            self._apply_rating(r, fb, used, tapped=None, inferred=True, cant_start=False)
+        except TutorError:
+            pass
+
+    def _apply_rating(self, r, fb, used: str, *, tapped: str | None, inferred: bool, cant_start: bool) -> None:
+        level, state = flow.skill_state(self.db, r["skill_id"])
+        sig = flow.collect(self.db, fb["id"], cant_start=cant_start)
+        passed_names = flow.passed_skill_names(self.db, r["skill_id"])
+        if fb["passed"]:                                      # the skill is passed: there is no next task to change
+            dec = flow.Decision(False, None, "passed", "Noted. The skill is passed, so there is no next task to change.", level, state, "")
+        else:
+            dec = flow.decide(used, level, state, sig, flow.lever_scores(self.db), attempt_next=r["attempt"] + 1, passed_skills=passed_names)
+        new_task = None
+        if dec.changed and r["task_json"]:                    # the model call comes first: if it fails, nothing is written and the tap can be repeated
+            from .teaching import adjust_task
+            new_task = adjust_task(self.ctx(r), json.loads(r["task_json"]), dec.lever, dec.state_after)
+        flow.record(self.db, session_id=r["id"], skill_id=r["skill_id"], feedback_id=fb["id"], rating=tapped, rating_used=used, inferred=inferred, sig=sig, dec=dec,
+                    level_before=level, now=iso(self.clock()))
+        if new_task is not None:
+            self.db.execute("UPDATE session SET task_json = ? WHERE id = ?", (json.dumps(new_task), r["id"]))
+            self.db.commit()
+
+    def _flow_view(self, r: sqlite3.Row) -> dict:
+        level, state = flow.skill_state(self.db, r["skill_id"])
+        ls = self.db.execute("SELECT hours_total FROM learner_skill WHERE skill_id = ?", (r["skill_id"],)).fetchone()
+        hours = ls["hours_total"] if ls else 0.0
+        fb = self._latest_feedback(r["id"])
+        sub = self._latest_submission(r["id"])
+        current = fb is not None and sub is not None and fb["submission_id"] == sub["id"]
+        rating = flow.rating_for_feedback(self.db, fb["id"]) if current else None
+        return {"level": level, "supports": state["supports"], "constraints": state["constraints"], "hours": round(hours, 2), "early": hours < flow.BARRIER_HOURS,
+                "success_rate": flow.success_rate(self.db, r["skill_id"]), "target": list(flow.TARGET_SUCCESS),
+                "can_rate": bool(current and rating is None and r["phase"] == "feedback" and not r["ended_at"]), "rating": rating}
 
     # --- the foundations check (Flow 10)
     def _concept(self, cid: int) -> dict:

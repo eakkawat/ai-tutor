@@ -4,7 +4,9 @@ import { Link, useParams } from "react-router-dom";
 import { api, ApiError, type SessionView } from "../api";
 import { Attachments } from "../components/Attachments";
 import { CheckPanel } from "../components/CheckPanel";
+import { FlowRatingPanel } from "../components/FlowRating";
 import { MessageView, mmss, PhaseStepper, SourcePanel, useTick } from "../components/SessionParts";
+import { TaskDetails } from "../components/TaskCard";
 
 const HEARTBEAT_MS = 30_000;
 
@@ -136,10 +138,7 @@ export default function Session() {
           {timed && v.task && (
             <form className="card action stack" aria-label="Practice task" onSubmit={(e) => { e.preventDefault(); run("submit", text); }}>
               <div className="eyebrow">{v.phase === "revise" ? "Revise" : "Practice"} · {v.task.minutes} min · Attempt {v.next_attempt}</div>
-              <div className="row" style={{ justifyContent: "flex-start", gap: 8 }}>
-                {v.task.support && <span className="tag">Support: {v.task.support}</span>}<span className="tag">Speed over polish</span>
-              </div>
-              {v.task.template.length > 0 && <ol className="small" style={{ margin: 0 }}>{v.task.template.map((b) => <li key={b}>{b}</li>)}</ol>}
+              <TaskDetails task={v.task} flow={v.flow} />
               <label htmlFor="work">Your work</label>
               <textarea id="work" className="bigtext" value={text} onChange={(e) => setText(e.target.value)} />
               <Attachments sessionId={v.id} assets={v.assets} mediaEnabled={mediaEnabled} vision={vision.data?.vision ?? null} />
@@ -155,6 +154,7 @@ export default function Session() {
               <div><button type="button" className="btn primary" disabled={busy} onClick={() => run("feedback")}>Get feedback</button></div>
             </section>
           )}
+          {v.phase === "feedback" && !v.ended && !v.feedback_pending && <FlowRatingPanel v={v} />}
           {v.phase === "feedback" && !v.ended && v.route && (
             <section className="card action stack" aria-label="What next">
               {v.route === "reteach" && <p style={{ margin: 0 }}>A concept needs another look before your next attempt: <strong>{v.route_concepts.join(", ")}</strong>. I will teach it again from a new angle, then check it.</p>}

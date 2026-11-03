@@ -57,14 +57,6 @@ class LessonOut(BaseModel):
     example: str = ""
 
 
-class PracticeTaskOut(BaseModel):
-    title: str
-    instructions: str
-    support: str | None = None
-    template: list[str] = Field(default_factory=list)
-    minutes: int = 20
-
-
 class QAOut(BaseModel):
     answer: str
     drift: bool = False
@@ -266,13 +258,132 @@ def make_lesson(ctx: Ctx) -> Lesson:
     raise TutorError("I could not ground this lesson in your books, so I am not showing it. Try again, or add a book that covers this skill.")
 
 
-def make_practice_task(ctx: Ctx, attempt: int, difficulty: int) -> dict:
-    out = _ask(ctx, PracticeTaskOut, "practice_task", "practice_task", attempt=str(attempt), difficulty=str(difficulty),
-               diagnosis=fence("diagnosis", diagnosis_text(ctx.db, ctx.session_id)))
+class PracticeTaskOut(BaseModel):
+    title: str
+    instructions: str
+    template: list[str] = Field(default_factory=list)
+    worked_example: str = ""
+    hint: str = ""
+    steps: list[str] = Field(default_factory=list)
+    smaller_scope: str = ""
+    constraint: str = ""
+    higher_standard: str = ""
+    combine: str = ""
+    minutes: int = 20
+
+
+class PieceOut(BaseModel):
+    text: str = ""
+    items: list[str] = Field(default_factory=list)
+
+
+EARLY_HOURS = 3.0
+TIME_LIMIT_FACTOR = 0.75
+MIN_TASK_MINUTES = 10
+
+
+def setup_text(state: dict) -> str:
+    """The task's set-up as plain lines for the prompt: every support and constraint, on or off."""
+    from .flow import CONSTRAINTS, LABEL, SUPPORTS
+    lines = [f"- {LABEL[k]}: {'ON' if k in state['supports'] else 'off'}" for k in SUPPORTS]
+    lines += [f"- {LABEL[k]}: {'ON' + (' (' + str(state.get('combine_with')) + ')' if k == 'combine' and state.get('combine_with') else '') if k in state['constraints'] else 'off'}"
+              for k in CONSTRAINTS if k != "time_limit"]
+    return "\n".join(lines)
+
+
+def stage_note(hours: float) -> str:
+    return ("This is an early stage on this skill (under 3 hours). Favour quantity and speed over polish: ask for several quick short attempts "
+            "rather than one polished piece.") if hours < EARLY_HOURS else "Ask for one considered piece of work."
+
+
+def derive_support(task: dict, state: dict) -> str | None:
+    from .flow import SHORT
+    names = [SHORT[k].lower() for k in state["supports"]]
+    return ", ".join(names) or None
+
+
+def _clean_list(items: list[str], lo: int, hi: int) -> list[str]:
+    out = [t.strip() for t in items if t.strip()][:hi]
+    return out if len(out) >= lo else []
+
+
+def make_practice_task(ctx: Ctx, attempt: int, difficulty: int, state: dict | None = None, hours: float = 0.0) -> dict:
+    """A task set up exactly as the levers say. A piece the model leaves out for a lever that is on is asked for on its own, so a
+    promised support is never missing, and a piece for a lever that is off is dropped."""
+    from .flow import DEFAULT_STATE
+    state = state or dict(DEFAULT_STATE)
+    out = _ask(ctx, PracticeTaskOut, "practice_task", "practice_task", attempt=str(attempt), difficulty=str(difficulty), setup=setup_text(state),
+               stage_note=stage_note(hours), diagnosis=fence("diagnosis", diagnosis_text(ctx.db, ctx.session_id)))
+    on = set(state["supports"]) | set(state["constraints"])
+    extras: dict = {}
+    if "template" in on:
+        extras["template"] = _clean_list(out.template, 3, 6)
+    if "split_steps" in on:
+        extras["split_steps"] = _clean_list(out.steps, 3, 5)
+    for kind, val in (("worked_example", out.worked_example), ("hint", out.hint), ("smaller_scope", out.smaller_scope), ("constraint", out.constraint),
+                      ("higher_standard", out.higher_standard), ("combine", out.combine)):
+        if kind in on and val.strip():
+            extras[kind] = val.strip()
     minutes = min(max(out.minutes, 15), 25)
-    template = [t.strip() for t in out.template if t.strip()][:6] if out.support and "template" in out.support.lower() else []
-    return {"title": out.title.strip(), "instructions": out.instructions.strip(), "support": (out.support or "").strip() or None,
-            "template": template, "minutes": minutes, "attempt": attempt}
+    task = {"title": out.title.strip(), "instructions": out.instructions.strip(), "extras": extras, "minutes": minutes, "base_minutes": minutes, "attempt": attempt}
+    for kind in on - {"time_limit"}:
+        if not extras.get(kind):
+            task = add_piece(ctx, task, kind, state)
+    if "time_limit" in on:
+        task["minutes"] = max(MIN_TASK_MINUTES, round(task["base_minutes"] * TIME_LIMIT_FACTOR))
+    return _finish(task, state)
+
+
+def _finish(task: dict, state: dict) -> dict:
+    task["template"] = task["extras"].get("template", [])
+    task["support"] = derive_support(task, state)
+    return task
+
+
+def adjust_task(ctx: Ctx, task: dict, lv, state_after: dict) -> dict:
+    """The same task with exactly one lever pulled. Taking something away needs no model; adding a support or constraint writes only that one
+    new piece. Raises TutorError (and changes nothing) if the piece cannot be written."""
+    import copy
+    t = copy.deepcopy(task)
+    t.setdefault("extras", {})
+    if "template" not in t["extras"] and t.get("template"):
+        t["extras"]["template"] = t["template"]
+    t.setdefault("base_minutes", t["minutes"])
+    if lv.name == "time_limit":
+        t["minutes"] = max(MIN_TASK_MINUTES, round(t["base_minutes"] * TIME_LIMIT_FACTOR)) if lv.op == "add" else t["base_minutes"]
+    elif lv.op == "remove":
+        t["extras"].pop(lv.name, None)
+    else:
+        t = add_piece(ctx, t, lv.name, state_after)
+    return _finish(t, state_after)
+
+
+CHANGE_TEXT = {
+    "worked_example": "Add a short worked example of the skill on a made-up case, not the learner's own work.",
+    "template": "Add a beat template: 3 to 6 short beat labels in `items`.",
+    "smaller_scope": "Narrow the task to a smaller piece, in one sentence.",
+    "hint": "Add one hint that points without giving the answer.",
+    "split_steps": "Split the task into 3 to 5 short steps, in `items`.",
+    "constraint": "Add one extra constraint that makes the task harder, for example a rule about what may not be used.",
+    "higher_standard": "Raise the bar: one sentence on how strictly the principles must be applied.",
+    "combine": "Also ask the learner to use the skill named below, inside this same task, in one sentence.",
+}
+
+
+def add_piece(ctx: Ctx, task: dict, kind: str, state: dict) -> dict:
+    """Write the one new piece a lever needs and put it in the task. Nothing else in the task changes."""
+    change = CHANGE_TEXT[kind] + (f"\nThe skill to combine: {state.get('combine_with')}" if kind == "combine" else "")
+    out = _ask(ctx, PieceOut, "task_adjust", "task_adjust", task=fence("task", f"{task['title']}\n{task['instructions']}"), change=change)
+    if kind in ("template", "split_steps"):
+        items = _clean_list(out.items, 3, 6 if kind == "template" else 5)
+        if not items:
+            raise TutorError("I could not write that part of the task. Nothing was changed; try again.")
+        task["extras"][kind] = items
+    else:
+        if not out.text.strip():
+            raise TutorError("I could not write that part of the task. Nothing was changed; try again.")
+        task["extras"][kind] = out.text.strip()
+    return task
 
 
 def answer_question(ctx: Ctx, question: str, phase: str) -> Answer:

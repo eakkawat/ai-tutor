@@ -45,6 +45,11 @@ class DraftIn(BaseModel):
     text: str = ""
 
 
+class RatingIn(BaseModel):
+    rating: str
+    cant_start: bool = False
+
+
 class NoteIn(BaseModel):
     note: str = ""
 
@@ -59,6 +64,13 @@ def get_session(session_id: int, request: Request) -> dict:
 def act(session_id: int, body: ActIn, request: Request) -> dict:
     _exists(request.app.state.db, session_id)
     return run(service(request).act, session_id, body.action, body.text)
+
+
+@router.post("/sessions/{session_id}/rating")
+def rate(session_id: int, body: RatingIn, request: Request) -> dict:
+    """One tap after a task: Too easy, Just right or Too hard. Returns the session with what changed for the next attempt."""
+    _exists(request.app.state.db, session_id)
+    return run(service(request).rate, session_id, body.rating, body.cant_start)
 
 
 @router.get("/sessions/{session_id}/compare")
