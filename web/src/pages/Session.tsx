@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api, ApiError, type SessionView } from "../api";
+import { CheckPanel } from "../components/CheckPanel";
 import { MessageView, mmss, PhaseStepper, SourcePanel, useTick } from "../components/SessionParts";
 
-const LEVEL: Record<string, string> = { none: "Not yet", define: "Define only", spot: "Spot", use: "Use" };
 const HEARTBEAT_MS = 30_000;
 
 function Pass({ v }: { v: SessionView }) {
@@ -33,6 +33,7 @@ export default function Session() {
   const q = useQuery({ queryKey: ["session", id], queryFn: () => api.session(id), retry: false });
   const v = q.data;
   const [panel, setPanel] = useState<number | null>(null);
+  const [comparing, setComparing] = useState(false);
   const [text, setText] = useState("");
   const [question, setQuestion] = useState("");
   const [last, setLast] = useState<{ action: string; text?: string } | null>(null);
@@ -46,6 +47,10 @@ export default function Session() {
   useEffect(() => {
     if (v && v.phase === "diagnose" && v.messages.length === 0 && !begun.current && !v.ended) { begun.current = true; act.mutate({ action: "begin" }); }
   }, [v]);                                                                                        // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Revising starts from the work you handed in, not from a blank page.
+  const lastWork = [...(v?.messages ?? [])].reverse().find((m) => m.kind === "submission")?.content ?? "";
+  useEffect(() => { if (v?.phase === "revise" && !text.trim() && lastWork) setText(lastWork); }, [v?.phase, lastWork]);       // eslint-disable-line react-hooks/exhaustive-deps
 
   // The draft is saved as you type, and restored after a restart.
   const timed = v?.phase === "practice" || v?.phase === "revise";
@@ -117,17 +122,7 @@ export default function Session() {
           )}
           {v.phase === "learn" && <div><button type="button" className="btn primary" disabled={busy} onClick={() => run("continue")}>Continue to the check</button></div>}
 
-          {v.phase === "check" && (
-            <section className="locked" aria-label="Foundations check">
-              <div className="eyebrow">Check · foundations</div>
-              <ul className="list" style={{ gap: 6 }}>
-                {v.gate.concepts.map((c) => <li key={c.id} className="row"><span>{c.name}</span><span className={`pill ${c.level === "use" || c.level === "spot" ? "success" : c.level === "define" ? "warning" : "neutral"}`}>{LEVEL[c.level]}</span></li>)}
-              </ul>
-              {!v.gate.unlocked && <p id="why-locked" role="status" style={{ margin: 0 }}>{v.gate.message}</p>}
-              <div><button type="button" className="btn primary" disabled={busy || !v.gate.unlocked} aria-describedby={v.gate.unlocked ? undefined : "why-locked"}
-                onClick={() => run("unlock")}>{v.gate.unlocked ? "Start practice" : "Practice is locked"}</button></div>
-            </section>
-          )}
+          {v.phase === "check" && <CheckPanel v={v} busy={busy} run={run} />}
 
           {timed && v.task && (
             <form className="card action stack" aria-label="Practice task" onSubmit={(e) => { e.preventDefault(); run("submit", text); }}>
@@ -141,7 +136,25 @@ export default function Session() {
               <div><button type="submit" className="btn primary" disabled={busy || !text.trim()}>Submit attempt {v.next_attempt}</button></div>
             </form>
           )}
-          {v.phase === "feedback" && !v.ended && <p role="status" className="card" style={{ margin: 0 }}>Attempt {v.attempt} is saved. Feedback on it is not available yet.</p>}
+          {v.phase === "feedback" && !v.ended && v.feedback_pending && (
+            <section className="card action stack" aria-label="Feedback pending">
+              <p style={{ margin: 0 }}>Attempt {v.attempt} is saved. {v.feedback_error ?? "Feedback is on its way."}</p>
+              <div><button type="button" className="btn primary" disabled={busy} onClick={() => run("feedback")}>Get feedback</button></div>
+            </section>
+          )}
+          {v.phase === "feedback" && !v.ended && v.route && (
+            <section className="card action stack" aria-label="What next">
+              {v.route === "reteach" && <p style={{ margin: 0 }}>A concept needs another look before your next attempt: <strong>{v.route_concepts.join(", ")}</strong>. I will teach it again from a new angle, then check it.</p>}
+              {v.route === "revise" && <p style={{ margin: 0 }}>Revise your work using the fixes above. The difficulty stays as it is for now.</p>}
+              {v.route === "pass" && <p style={{ margin: 0 }}>Every principle is followed. This skill is yours.</p>}
+              <div className="row" style={{ justifyContent: "flex-start" }}>
+                {v.route === "pass" && <button type="button" className="btn primary" disabled={busy} onClick={() => run("pass")}>Finish this skill</button>}
+                {v.route === "reteach" && <button type="button" className="btn primary" disabled={busy} onClick={() => run("reteach")}>Re-teach {v.route_concepts.join(", ")}</button>}
+                {v.route === "revise" && <button type="button" className="btn primary" disabled={busy} onClick={() => run("revise")}>Start attempt {v.next_attempt}</button>}
+                {v.attempt >= 2 && <button type="button" className="btn" onClick={() => setComparing(true)}>Compare attempts</button>}
+              </div>
+            </section>
+          )}
           {v.phase === "pass" && <Pass v={v} />}
 
           <form className="card stack" aria-label="Ask a question" onSubmit={(e) => { e.preventDefault(); run("ask", question); }}>
@@ -162,6 +175,30 @@ export default function Session() {
           </section>
         </aside>
       </div>
+      {comparing && <CompareDialog id={v.id} latest={v.attempt} onClose={() => setComparing(false)} />}
     </main>
+  );
+}
+
+function CompareDialog({ id, latest, onClose }: { id: number; latest: number; onClose: () => void }) {
+  const q = useQuery({ queryKey: ["compare", id, latest], queryFn: () => api.compare(id, latest - 1, latest), retry: false });
+  return (
+    <div className="scrim">
+      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="cmp-title" style={{ maxWidth: 640 }}>
+        <h2 id="cmp-title">Attempt {latest - 1} to attempt {latest}</h2>
+        {q.isError && <p role="alert" className="error" style={{ margin: 0 }}>{q.error.message}</p>}
+        {q.data && (
+          <ul className="list mono small" style={{ gap: 2, maxHeight: 360, overflow: "auto" }}>
+            {q.data.lines.map((l, i) => (
+              <li key={i} style={{ background: l.op === "+" ? "var(--success-panel)" : l.op === "-" ? "var(--danger-panel)" : undefined, padding: "1px 6px", whiteSpace: "pre-wrap" }}>
+                <span aria-hidden="true">{l.op === " " ? "  " : `${l.op} `}</span>
+                {l.op !== " " && <span className="sr-only">{l.op === "+" ? "Added: " : "Removed: "}</span>}{l.text}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="row" style={{ justifyContent: "flex-end" }}><button type="button" className="btn primary" autoFocus onClick={onClose}>Close</button></div>
+      </div>
+    </div>
   );
 }

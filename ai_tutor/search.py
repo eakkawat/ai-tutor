@@ -81,3 +81,9 @@ def search(db: sqlite3.Connection, embedder: Embedder | None, query: str, *, k: 
             first += _load(db, {c: s for c, s in scores.items() if c not in in_pref}, k - len(first))
         return first
     return _load(db, scores, k)
+
+
+def hit_by_id(db: sqlite3.Connection, chunk_id: int) -> Hit | None:
+    """One passage as a `Hit`, for citing it by id (a skill's principle passages, a concept's source passages)."""
+    r = db.execute("SELECT c.*, s.title AS source_title FROM chunk c JOIN source s ON s.id = c.source_id WHERE c.id = ?", (chunk_id,)).fetchone()
+    return Hit(r["id"], r["source_id"], r["source_title"], r["label"], r["title"], r["page_start"], r["page_end"], r["text"], 1.0) if r else None

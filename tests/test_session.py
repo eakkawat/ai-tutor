@@ -1,110 +1,14 @@
 import json
-from datetime import UTC, datetime, timedelta
 
 import pytest
-from helpers import FakeEmbedder, SmartBackend, words
+from helpers import FakeEmbedder, SmartBackend, fb_json, words
+from session_helpers import CITE1, CITE2, PRACTICE, WORK, eval_all, good_lesson, master, script, to_learn, to_practice, wait  # noqa: F401
 
 from ai_tutor import picker, projects
 from ai_tutor import skills as sk
 from ai_tutor.llm.client import LLMClient
 from ai_tutor.session import ALLOWED, ANYTIME, PHASES, SessionService, TransitionError, practice_gate
-from ai_tutor.store.conn import open_db
 from ai_tutor.teaching import MAX_LESSON_WORDS, TutorError, count_words, trim_words
-
-T0 = datetime(2026, 11, 3, 10, 0, 0, tzinfo=UTC)
-CITE1, CITE2 = "[Book A, ch. 3, p. 41]", "[Book A, ch. 4, p. 60]"
-
-
-class Clock:
-    def __init__(self):
-        self.now = T0
-
-    def __call__(self):
-        return self.now
-
-    def tick(self, **kw):
-        self.now += timedelta(**kw)
-
-
-def wait(env, svc, minutes):
-    """Time passes with the screen open: the browser sends a heartbeat every so often."""
-    for _ in range(int(minutes)):
-        env.clock.tick(minutes=1)
-        svc.act(env.sid, "heartbeat")
-
-
-def eval_all(followed=True, evidence="quote"):
-    return lambda u, c: {"principles": [{"n": 1, "result": "followed" if followed else "partly", "evidence": evidence},
-                                        {"n": 2, "result": "followed" if followed else "not", "evidence": evidence}],
-                         "can_do": "You can set the scene.", "gap": "The want shows up too late.", "level": 2 if not followed else 3}
-
-
-def good_lesson(u, c):
-    return {"title": "State the want early", "body": f"A scene needs a want first {c[0]}. The obstacle must push back {c[1]}.", "example": "Made-up example: a heist crew."}
-
-
-PRACTICE = {"title": "Rewrite the kitchen scene", "instructions": "Mai wants the recipe tin. Make it clear early.", "support": "beat template",
-            "template": ["Show the want", "First block", "New tactic"], "minutes": 20}
-
-
-def script(**over):
-    s = {"diagnose": {"task": "Write three lines where Mai wants the recipe tin."}, "diagnose_eval": eval_all(False), "teach": good_lesson,
-         "practice_task": PRACTICE, "qa": lambda u, c: {"answer": f"The want drives the scene {c[0]}. Back to your task.", "drift": False}}
-    s.update(over)
-    return s
-
-
-@pytest.fixture
-def env(tmp_path):
-    db = open_db(tmp_path / "a.db")
-    db.execute("INSERT INTO source(id, title) VALUES (1, 'Book A')")
-    for cid, label, page, text in [(1, "Ch. 3", 41, "A scene needs a want and an obstacle."), (2, "Ch. 4", 60, "Each exchange shifts who has the upper hand."),
-                                   (3, "Ch. 5", 70, "Subtext is what a character means but does not say.")]:
-        db.execute("INSERT INTO chunk(id, source_id, label, title, chapter, page_start, page_end, text, ord) VALUES (?,1,?,?,?,?,?,?,?)",
-                   (cid, label, label, label, page, page, text, cid))
-    db.commit()
-    c1 = sk.add_concept(db, name="want", definition="what a character is after", example="Made-up example", chunk_ids=[1],
-                        questions=[("spot", "Which line shows a want?", "B")])
-    c2 = sk.add_concept(db, name="obstacle", definition="what pushes back", example="Made-up example", chunk_ids=[2], questions=[("define", "What is an obstacle?", "force")])
-    skill = sk.add_skill(db, domain="screenwriting", name="Write a want and obstacle scene", description="You can write a scene driven by a want.",
-                         practice_type="scene", source_id=1, unit_label=None, status="active",
-                         principles=[("The want is clear in the first beat", "Can you name the want after beat one?", 1), ("The obstacle pushes back", "Does it answer each try?", 2)],
-                         concepts=[(c1, "spot"), (c2, "spot")])
-    other = sk.add_skill(db, domain="screenwriting", name="Cut on action", description="You can cut on action.", practice_type="edit", source_id=1,
-                         unit_label=None, status="active", principles=[("Cut during the movement", "t", 3), ("Match the eyeline", "t2", 3)], concepts=[])
-    p = projects.create(db, name="Grandma's Kitchen", description="A short film about my grandmother", good_enough="A stranger gets it", minutes_per_session=25)
-    started = picker.start_skill(db, p, skill)
-    clock = Clock()
-    log = tmp_path / "feedback.log"
-
-    def make(backend=None, **kw):
-        be = backend or SmartBackend(session=script())
-        svc = SessionService(db, llm=LLMClient("t", be, model="m"), embedder=FakeEmbedder(), clock=clock, log_path=log, **kw)
-        svc.be = be
-        return svc
-    return type("Env", (), {"db": db, "make": make, "sid": started["session_id"], "skill": skill, "other": other, "clock": clock, "log": log, "c1": c1, "c2": c2})
-
-
-def to_learn(env, svc=None):
-    svc = svc or env.make()
-    svc.act(env.sid, "begin")
-    svc.act(env.sid, "answer", "Mai: Give me the tin.")
-    svc.act(env.sid, "advance")
-    return svc
-
-
-def master(env, level="spot"):
-    env.db.execute("UPDATE concept_mastery SET level = ?", (level,))
-    env.db.commit()
-
-
-def to_practice(env, svc=None):
-    svc = to_learn(env, svc)
-    svc.act(env.sid, "continue")
-    master(env)
-    svc.act(env.sid, "unlock")
-    return svc
-
 
 # ---------- diagnose
 
@@ -320,7 +224,7 @@ def test_timer_counts_pauses_and_logs_overtime(env):
         svc.act(env.sid, "heartbeat")
     t = svc.view(env.sid)["timer"]
     assert t["elapsed_s"] == 300 + 26 * 60 and t["overtime_s"] == 300 + 26 * 60 - 1200 and t["left_s"] < 0          # going over is allowed
-    v = svc.act(env.sid, "submit", "My scene")
+    v = svc.act(env.sid, "submit", WORK)
     assert v["phase"] == "feedback"
     assert env.db.execute("SELECT overtime_s, minutes FROM session").fetchone()[:] == (pytest.approx(300 + 26 * 60 - 1200), pytest.approx(31.0))
 
@@ -340,33 +244,28 @@ def test_submitting_saves_a_version_logs_hours_and_clears_the_draft(env):
     wait(env, svc, 18)
     with pytest.raises(TransitionError, match="Write something"):
         svc.act(env.sid, "submit", "  ")
-    v = svc.act(env.sid, "submit", "INT. KITCHEN - NIGHT\nMai reaches for the tin.")
+    v = svc.act(env.sid, "submit", WORK)
     assert v["phase"] == "feedback" and v["attempt"] == 1 and v["draft"] == "" and v["timer"]["running"] is False
     sub = env.db.execute("SELECT version, text FROM submission").fetchone()
     assert sub[0] == 1 and sub[1].startswith("INT. KITCHEN")
     assert v["hours"] == pytest.approx(18 / 60, abs=0.01)
-    m = v["messages"][-1]
-    assert m["kind"] == "submission" and m["meta"]["version"] == 1 and m["meta"]["minutes"] == 18.0
+    sub_msg, fb_msg = v["messages"][-2:]
+    assert sub_msg["kind"] == "submission" and sub_msg["meta"]["version"] == 1 and sub_msg["meta"]["minutes"] == 18.0
+    assert fb_msg["kind"] == "feedback"                                 # feedback right after the submission
 
 
-def test_revise_and_pass_need_feedback_first(env):
+def test_revise_and_pass_follow_the_feedback(env):
     svc = to_practice(env)
-    svc.act(env.sid, "submit", "work")
-    with pytest.raises(TransitionError, match="Feedback has not been given"):
-        svc.act(env.sid, "revise")
-    with pytest.raises(TransitionError, match="Not passed yet"):
-        svc.act(env.sid, "pass")
-    sub = env.db.execute("SELECT id FROM submission").fetchone()[0]
-    env.db.execute("INSERT INTO feedback(submission_id, content, passed) VALUES (?, 'f', 0)", (sub,))
-    env.db.commit()
+    with pytest.raises(TransitionError, match="not available in the practice phase"):
+        svc.act(env.sid, "revise")                                       # nothing submitted yet: this phase does not offer it
+    svc.act(env.sid, "submit", WORK)                                     # feedback comes with the submission: 1 of 2 principles followed
     with pytest.raises(TransitionError, match="Not passed yet"):
         svc.act(env.sid, "pass")
     v = svc.act(env.sid, "revise")
     assert v["phase"] == "revise" and v["timer"]["running"] is True and v["task"]["title"] == "Rewrite the kitchen scene"
-    v = svc.act(env.sid, "submit", "second try")
+    svc.be.session["feedback"] = lambda u, c: fb_json(("followed", "followed"))
+    v = svc.act(env.sid, "submit", WORK + "\nMai: You said that last New Year.")
     assert v["attempt"] == 2 and env.db.execute("SELECT COUNT(*) FROM submission").fetchone()[0] == 2
-    env.db.execute("INSERT INTO feedback(submission_id, content, passed) VALUES ((SELECT id FROM submission WHERE version = 2), 'f', 1)")
-    env.db.commit()
     v = svc.act(env.sid, "pass")
     assert v["phase"] == "pass" and v["ended"] is True
     assert env.db.execute("SELECT status FROM learner_skill").fetchone()[0] == "passed"

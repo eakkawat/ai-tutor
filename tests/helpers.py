@@ -143,6 +143,16 @@ class SmartBackend:
             job, out = "teach", self._session("teach", user)
         elif "## Phase: Practice\n" in user:
             job, out = "practice_task", self._session("practice_task", user)
+        elif "## Phase: Feedback\n" in user:
+            job, out = "feedback", self._session("feedback", user)
+        elif "## Phase: Check, judging one answer" in user:
+            job, out = "concept_check", self._session("concept_check", user)
+        elif "## Phase: Check, a hint" in user:
+            job, out = "concept_hint", self._session("concept_hint", user)
+        elif "## Phase: Check, a new example to spot" in user:
+            job, out = "concept_spot", self._session("concept_spot", user)
+        elif "## Phase: Check, a short re-teach" in user:
+            job, out = "concept_reteach", self._session("concept_reteach", user)
         elif "A question from the learner" in user:
             job, out = "qa", self._session("qa", user)
         else:
@@ -168,3 +178,14 @@ class SmartBackend:
 def words(n: int, cite: str = "") -> str:
     """n words of filler, ending with a citation (the citation counts as words too, so n is approximate)."""
     return " ".join(["word"] * n) + (f" {cite}" if cite else "")
+
+
+def fb_json(results=("followed", "partly"), quotes=("Mai reaches for the tin", "Grandma slides the tin"), *, mistakes=None, fixes=None, shown=(), since="", comments=None):
+    """A feedback reply for a skill with len(results) principles."""
+    out = {"principles": [{"n": i, "result": r, "quote": quotes[i - 1] if i - 1 < len(quotes) else "", "comment": (comments or {}).get(i, f"Comment {i}.")}
+                          for i, r in enumerate(results, 1)],
+           "concepts_shown": list(shown), "since_last": since, "summary": "model summary"}
+    failing = [i for i, r in enumerate(results, 1) if r != "followed"]
+    out["fixes"] = fixes if fixes is not None else [{"n": i, "fix": f"Fix principle {i}.", "example": ""} for i in failing[:2]]
+    out["mistakes"] = mistakes if mistakes is not None else [{"n": i, "kind": "execution", "concept": None, "tag": f"mistake {i}"} for i in failing]
+    return out

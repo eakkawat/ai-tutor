@@ -17,7 +17,7 @@ from .embeddings import Embedder
 from .llm.client import LLMClient
 from .llm.errors import LLMError
 from .llm.prompts import DATA_RULE, fence, load_prompt
-from .search import Hit, search
+from .search import Hit, hit_by_id, search
 
 MAX_LESSON_WORDS = 300
 MAX_ANSWER_WORDS = 120
@@ -174,9 +174,9 @@ def hits_for_skill(ctx: Ctx, query: str, k: int = PASSAGES) -> list[Hit]:
     ids = [p["chunk_id"] for p in ctx.skill["principles"]]
     seen: dict[int, Hit] = {}
     for cid in ids:
-        r = db.execute("SELECT c.*, s.title AS source_title FROM chunk c JOIN source s ON s.id = c.source_id WHERE c.id = ?", (cid,)).fetchone()
-        if r:
-            seen[cid] = Hit(r["id"], r["source_id"], r["source_title"], r["label"], r["title"], r["page_start"], r["page_end"], r["text"], 1.0)
+        h = hit_by_id(db, cid)
+        if h:
+            seen[cid] = h
     books = {s["source_id"] for s in ctx.skill["sources"]}
     for h in search(db, ctx.embedder, query, k=k, prefer_sources=books or None):
         seen.setdefault(h.chunk_id, h)

@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { api, type Msg, type SessionPhase } from "../api";
+import { api, type FbMeta, type Msg, type SessionPhase } from "../api";
+import { FeedbackView } from "./FeedbackView";
 
 export const PHASES: { key: SessionPhase; label: string }[] = [
   { key: "diagnose", label: "Diagnose" }, { key: "learn", label: "Learn" }, { key: "check", label: "Check" }, { key: "practice", label: "Practice" },
@@ -66,7 +67,10 @@ export function FeltWrong({ messageId }: { messageId: number }) {
   );
 }
 
-const LABEL: Record<string, string> = { diagnose_task: "Diagnosis", diagnosis: "Diagnosis", learn: "Learn", practice_task: "Practice", qa: "Answer", note: "Note" };
+const LABEL: Record<string, string> = {
+  diagnose_task: "Diagnosis", diagnosis: "Diagnosis", learn: "Learn", practice_task: "Practice", qa: "Answer", note: "Note", check_question: "Check", check_result: "Check",
+  check_hint: "Hint", check_reteach: "Re-teach", reteach: "Re-teach", check_done: "Check", feedback: "Feedback", feedback_error: "Feedback",
+};
 
 export function MessageView({ m, onOpen }: { m: Msg; onOpen: (chunkId: number) => void }) {
   if (m.role === "user") {
@@ -76,6 +80,17 @@ export function MessageView({ m, onOpen }: { m: Msg; onOpen: (chunkId: number) =
         <p className={m.kind === "submission" ? "mono" : undefined}>{m.content}</p>
       </article>
     );
+  }
+  if (m.kind === "feedback") {
+    return (
+      <article className="card msg" aria-label="Feedback">
+        <div className="who"><span className="eyebrow">Feedback · Attempt {String((m.meta as unknown as FbMeta).version)}</span><FeltWrong messageId={m.id} /></div>
+        <FeedbackView meta={m.meta as unknown as FbMeta} onOpen={onOpen} />
+      </article>
+    );
+  }
+  if (m.kind === "feedback_error") {
+    return <article className="card problem msg" role="alert" aria-label="Feedback"><p>{m.content}</p></article>;
   }
   const title = typeof m.meta.title === "string" ? m.meta.title : null;
   const [head, ...rest] = m.kind === "practice_task" ? m.content.split("\n") : [null];

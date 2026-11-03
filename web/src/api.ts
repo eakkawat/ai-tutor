@@ -45,7 +45,18 @@ export type SessionView = {
   timer: { limit_s: number; elapsed_s: number; running: boolean; left_s: number | null; overtime_s: number };
   diagnosis: { can_do: string; gap: string; level: number; meets_all: boolean } | null;
   gate: Gate; messages: Msg[]; allowed: string[];
+  check: { current: CheckQuestion | null; remaining_minutes: number; budget_left: number; all_done: boolean } | null;
+  feedback_pending: boolean; feedback_error: string | null; route: "pass" | "reteach" | "revise" | null; route_concepts: string[];
 };
+export type CheckQuestion = { concept: string; concept_id: number; level: "define" | "spot"; prompt: string; options: string[]; attempts: number; hint_shown: boolean };
+export type FbResult = { n: number; principle: string; result: "followed" | "partly" | "not"; comment: string; quote: string; locator: string | null; citation: string | null; chunk_id: number };
+export type FbFix = { n: number; fix: string; example: string; citation: string | null; chunk_id: number; principle: string };
+export type FbMeta = {
+  version: number; passed: boolean; summary: string; results: FbResult[]; fixes: FbFix[]; since: string;
+  mistakes: { n: number; kind: "concept" | "execution"; concept: string | null; tag: string; count?: number }[];
+  diff: { principles: { n: number; before: string | null; after: string; change: "improved" | "same" | "worse" }[]; lines_added: number; lines_removed: number } | null;
+};
+export type Compare = { a: { version: number; text: string }; b: { version: number; text: string }; lines: { op: " " | "+" | "-"; text: string }[] };
 
 export type Triage = { book_type: string; domain?: string; practicable: boolean; likely_skills: string[]; reason: string };
 export type SourceStatus = "processing" | "ready" | "reference_only" | "needs_ocr" | "error" | "cancelled" | "new";
@@ -119,6 +130,7 @@ export const api = {
   session: (id: number) => call<SessionView>(`/api/sessions/${id}`),
   act: (id: number, action: string, text = "") => call<SessionView>(`/api/sessions/${id}/act`, { method: "POST", body: JSON.stringify({ action, text }) }),
   saveDraft: (id: number, text: string) => call<{ ok: true }>(`/api/sessions/${id}/draft`, { method: "PUT", body: JSON.stringify({ text }) }),
+  compare: (id: number, a: number, b: number) => call<Compare>(`/api/sessions/${id}/compare?a=${a}&b=${b}`),
   nextSkill: (id: number) => call<{ next: PickCard | null; note: string | null; all_passed: boolean }>(`/api/sessions/${id}/next`),
   feltWrong: (messageId: number, note: string) => call<{ ok: true }>(`/api/messages/${messageId}/felt-wrong`, { method: "POST", body: JSON.stringify({ note }) }),
   passage: (id: number) => call<Passage>(`/api/chunks/${id}`),

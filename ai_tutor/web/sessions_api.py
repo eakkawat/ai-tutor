@@ -60,6 +60,12 @@ def act(session_id: int, body: ActIn, request: Request) -> dict:
     return run(service(request).act, session_id, body.action, body.text)
 
 
+@router.get("/sessions/{session_id}/compare")
+def compare(session_id: int, a: int, b: int, request: Request) -> dict:
+    _exists(request.app.state.db, session_id)
+    return run(service(request).compare, session_id, a, b)
+
+
 @router.put("/sessions/{session_id}/draft")
 def draft(session_id: int, body: DraftIn, request: Request) -> dict:
     _exists(request.app.state.db, session_id)

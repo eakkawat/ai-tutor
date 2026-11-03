@@ -9,6 +9,8 @@ import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
+from . import check as chk
+from . import feedback as fbk
 from . import skills as sk
 from .citations import cite
 from .embeddings import Embedder
@@ -20,9 +22,9 @@ PHASES = ("diagnose", "learn", "check", "practice", "feedback", "revise", "pass"
 ALLOWED: dict[str, set[str]] = {
     "diagnose": {"begin", "answer", "advance"},
     "learn": {"continue"},
-    "check": {"unlock"},
+    "check": {"check", "check_answer", "check_hint", "check_more", "unlock"},
     "practice": {"submit"},
-    "feedback": {"revise", "pass"},
+    "feedback": {"feedback", "revise", "reteach", "pass"},
     "revise": {"submit"},
     "pass": set(),
 }
@@ -114,9 +116,41 @@ class SessionService:
             "difficulty": ls["difficulty_current"] if ls else 3, "hours": round(ls["hours_total"], 2) if ls else 0.0,
             "task": json.loads(r["task_json"]) if r["task_json"] else None, "draft": r["draft_text"], "timer": self.timer(r),
             "diagnosis": json.loads(r["diagnosis_json"]) if r["diagnosis_json"] else None,
-            "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs,
+            "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs, **self._extras(r, msgs),
             "allowed": sorted(ALLOWED[r["phase"]] | ANYTIME) if not r["ended_at"] else ["ask"],
         }
+
+    def _extras(self, r: sqlite3.Row, msgs: list[dict]) -> dict:
+        """What the screen needs for the check and for what to do after feedback."""
+        out: dict = {"check": None, "feedback_pending": False, "feedback_error": None, "route": None, "route_concepts": []}
+        if r["phase"] == "check":
+            st = chk.load_state(r["check_json"])
+            cur = st["current"]
+            concept = self._concept(cur["concept_id"]) if cur else None
+            out["check"] = {
+                "current": {"concept": concept["name"], "concept_id": concept["id"], "level": cur["level"], "prompt": cur["prompt"], "options": chk.options(cur["prompt"]),
+                            "attempts": cur["attempts"], "hint_shown": cur["hint_shown"]} if cur else None,
+                "remaining_minutes": chk.remaining(self.db, r["skill_id"]) * chk.MINUTES_PER_QUESTION,
+                "budget_left": max(0, chk.MAX_QUESTIONS_PER_SITTING - st["total"]), "all_done": chk.target(self.db, r["skill_id"]) is None}
+        if r["phase"] == "feedback" and not r["ended_at"]:
+            sub = self._latest_submission(r["id"])
+            fb = self._latest_feedback(r["id"])
+            if sub is not None and (fb is None or fb["submission_id"] != sub["id"]):
+                out["feedback_pending"] = True
+                err = next((m for m in reversed(msgs) if m["kind"] == "feedback_error"), None)
+                out["feedback_error"] = err["content"] if err else None
+            elif fb is not None:
+                cm = self._concept_mistakes(fb)
+                out["route"] = "pass" if fb["passed"] else ("reteach" if cm else "revise")
+                out["route_concepts"] = sorted({m["concept"] for m in cm})
+        return out
+
+    def compare(self, session_id: int, a: int, b: int) -> dict:
+        """Two attempts side by side: both texts and a line-by-line difference (D7)."""
+        rows = {v: self.db.execute("SELECT version, text FROM submission WHERE session_id = ? AND version = ?", (session_id, v)).fetchone() for v in (a, b)}
+        if not all(rows.values()):
+            raise TransitionError("One of those attempts does not exist.")
+        return {"a": {"version": a, "text": rows[a]["text"]}, "b": {"version": b, "text": rows[b]["text"]}, "lines": fbk.line_diff(rows[a]["text"] or "", rows[b]["text"] or "")}
 
     # ---------- small writes
     def _seen(self, r: sqlite3.Row) -> None:
@@ -209,6 +243,7 @@ class SessionService:
 
     # --- learn → check → practice
     def _do_continue(self, r, _text):
+        self.db.execute("UPDATE session SET check_json = ? WHERE id = ?", (json.dumps(chk.new_state()), r["id"]))
         self._set_phase(r["id"], "check")
         try:                                                 # have the practice task ready before the learner needs it
             self._ensure_task(self.row(r["id"]))
@@ -221,11 +256,13 @@ class SessionService:
             raise TransitionError(gate["message"])
         r = self.row(r["id"])
         task = self._ensure_task(r)
+        revising = r["attempt"] > 0                          # back from a re-teach: the same task, a new attempt
         now = iso(self.clock())
-        self.db.execute("UPDATE session SET phase = 'practice', timer_limit_s = ?, timer_elapsed_s = 0, timer_since = ?, timer_seen = ? WHERE id = ?",
-                        (task["minutes"] * 60, now, now, r["id"]))
+        self.db.execute("UPDATE session SET phase = ?, timer_limit_s = ?, timer_elapsed_s = 0, timer_since = ?, timer_seen = ?, check_json = NULL WHERE id = ?",
+                        ("revise" if revising else "practice", task["minutes"] * 60, now, now, r["id"]))
         self.db.commit()
-        self._task_message(r["id"], task, "practice")
+        if not revising:
+            self._task_message(r["id"], task, "practice")
 
     def _ensure_task(self, r) -> dict:
         if r["task_json"]:
@@ -263,6 +300,8 @@ class SessionService:
     def _do_submit(self, r, text):
         if not text:
             raise TransitionError("Write something to submit first.")
+        if fbk.too_short(text):
+            raise TransitionError("That is too short to give feedback on. Add more of your work, then submit again.")
         elapsed = self._elapsed(r)
         limit = r["timer_limit_s"]
         over = max(0.0, elapsed - limit) if limit else 0.0
@@ -276,20 +315,92 @@ class SessionService:
         self.add_message(r["id"], "user", text, kind="submission", phase=r["phase"],
                          meta={"submission_id": sub, "version": attempt, "minutes": round(elapsed / 60, 1), "overtime_s": int(over)})
         self.db.commit()
+        try:                                                  # feedback right after every submission; the work is kept even if it cannot be given now
+            self._give_feedback(r["id"])
+        except TutorError as e:
+            self.add_message(r["id"], "tutor", str(e), kind="feedback_error", phase="feedback", meta={"retryable": e.retryable})
 
-    # --- feedback → revise / pass (their content is TASKS_006; the guards are enforced now)
+    # --- feedback → revise / re-teach / pass
     def _latest_feedback(self, session_id: int) -> sqlite3.Row | None:
         return self.db.execute(
             "SELECT f.* FROM feedback f JOIN submission su ON su.id = f.submission_id WHERE su.session_id = ? ORDER BY su.version DESC, f.id DESC LIMIT 1",
             (session_id,)).fetchone()
 
+    def _latest_submission(self, session_id: int) -> sqlite3.Row | None:
+        return self.db.execute("SELECT * FROM submission WHERE session_id = ? ORDER BY version DESC LIMIT 1", (session_id,)).fetchone()
+
+    def _concept_mistakes(self, fb: sqlite3.Row | None) -> list[dict]:
+        """Mistakes in the latest feedback that come from misunderstanding a concept: they are re-taught before another attempt (D11)."""
+        if fb is None or not fb["mistakes_json"]:
+            return []
+        return [m for m in json.loads(fb["mistakes_json"]) if m["kind"] == "concept" and m.get("concept_id")]
+
+    def _give_feedback(self, session_id: int) -> None:
+        """Judge the latest submission against the checklist, then store the verdicts. Nothing is written if the model's reply is unusable."""
+        r = self.row(session_id)
+        sub = self._latest_submission(session_id)
+        ctx = self.ctx(r)
+        prev_text, before = fbk.previous_text(self.db, session_id, sub["version"])
+        out = fbk.generate(ctx, task=json.loads(r["task_json"]) if r["task_json"] else None, work=sub["text"], attempt=sub["version"], previous=prev_text)
+        diff, since = None, ""
+        if sub["version"] > 1 and before:
+            old = self.db.execute("SELECT text FROM submission WHERE session_id = ? AND version < ? ORDER BY version DESC LIMIT 1", (session_id, sub["version"])).fetchone()
+            diff = fbk.revision_diff(old["text"] or "", sub["text"] or "", before, {x["n"]: x["result"] for x in out["results"]})
+            since = out["since_last"] or fbk.diff_sentence(diff)
+        now = self.clock()
+        fid = fbk.save(self.db, sub["id"], r["skill_id"], out, now)
+        blocked = {m["concept_id"] for m in out["mistakes"] if m["kind"] == "concept"}
+        for cid in out["concepts_shown"]:                     # applying a concept in the work shows 'use', but only for one already at 'spot'
+            lvl = self.db.execute("SELECT level FROM concept_mastery WHERE concept_id = ?", (cid,)).fetchone()
+            if cid not in blocked and lvl and sk.LEVEL_ORDER[lvl["level"]] >= sk.LEVEL_ORDER["spot"]:
+                chk.set_level(self.db, cid, "use", now)
+        cites = list({x["citation"]: {"citation": x["citation"], "chunk_id": x["chunk_id"]} for x in out["results"] if x["citation"]}.values())
+        self.add_message(session_id, "tutor", out["summary"], kind="feedback", phase="feedback", citations=cites,
+                         meta={"feedback_id": fid, "version": sub["version"], "passed": out["passed"], "summary": out["summary"], "results": out["results"],
+                               "fixes": out["fixes"], "mistakes": out["mistakes"], "diff": diff, "since": since})
+
+    def _do_feedback(self, r, _text):
+        sub = self._latest_submission(r["id"])
+        if sub is None:
+            raise TransitionError("There is no work to give feedback on yet.")
+        if self.db.execute("SELECT 1 FROM feedback WHERE submission_id = ?", (sub["id"],)).fetchone():
+            raise TransitionError("Feedback has already been given on this attempt.")
+        self._give_feedback(r["id"])
+
     def _do_revise(self, r, _text):
-        if self._latest_feedback(r["id"]) is None:
+        fb = self._latest_feedback(r["id"])
+        if fb is None:
             raise TransitionError("Feedback has not been given yet.")
+        if fb["passed"]:
+            raise TransitionError("Every principle is followed. Finish the skill instead.")
+        pending = self._concept_mistakes(fb)
+        if pending:
+            names = ", ".join(sorted({m["concept"] for m in pending}))
+            raise TransitionError(f"A concept needs another look before your next attempt: {names}. Re-teach it first.")
         task = self._ensure_task(r)
         now = iso(self.clock())
         self.db.execute("UPDATE session SET phase = 'revise', timer_limit_s = ?, timer_elapsed_s = 0, timer_since = ?, timer_seen = ? WHERE id = ?",
                         (task["minutes"] * 60, now, now, r["id"]))
+        self.db.commit()
+
+    def _do_reteach(self, r, _text):
+        """A concept mistake: teach that concept again from a new angle, send it back to be checked, then revise (D11)."""
+        mistakes = self._concept_mistakes(self._latest_feedback(r["id"]))
+        if not mistakes:
+            raise TransitionError("No concept needs re-teaching. Revise your work instead.")
+        ctx = self.ctx(r)
+        picked: dict[int, dict] = {}
+        for m in mistakes:
+            picked.setdefault(m["concept_id"], m)
+        done = []
+        for cid, m in picked.items():                         # all model calls first: a failure leaves the session as it was
+            concept = self.db.execute("SELECT id, name, definition FROM concept WHERE id = ?", (cid,)).fetchone()
+            done.append((dict(concept), chk.reteach(ctx, dict(concept), f"In their work: {m['tag']}.")))
+        for concept, rt in done:
+            chk.demote(self.db, concept["id"])
+            body = rt["text"] + (f"\n\nExample: {rt['example']}" if rt["example"] else "")
+            self.add_message(r["id"], "tutor", body, kind="reteach", phase="check", citations=rt["citations"], meta={"concept": concept["name"]})
+        self.db.execute("UPDATE session SET phase = 'check', check_json = ?, timer_since = NULL WHERE id = ?", (json.dumps(chk.new_state()), r["id"]))
         self.db.commit()
 
     def _do_pass(self, r, _text):
@@ -297,6 +408,97 @@ class SessionService:
         if fb is None or not fb["passed"]:
             raise TransitionError("Not passed yet: every principle must be followed.")
         self._complete(r)
+
+    # --- the foundations check (Flow 10)
+    def _concept(self, cid: int) -> dict:
+        row = self.db.execute("SELECT c.id, c.name, c.definition, COALESCE(m.level, 'none') AS level FROM concept c LEFT JOIN concept_mastery m ON m.concept_id = c.id "
+                              "WHERE c.id = ?", (cid,)).fetchone()
+        return dict(row)
+
+    def _save_check(self, session_id: int, state: dict) -> None:
+        self.db.execute("UPDATE session SET check_json = ? WHERE id = ?", (json.dumps(state), session_id))
+        self.db.commit()
+
+    def _do_check(self, r, _text):
+        """Ask the next question. Idempotent: if one is open, nothing changes."""
+        state = chk.load_state(r["check_json"])
+        if state["current"]:
+            return
+        t = chk.target(self.db, r["skill_id"])
+        if t is None:
+            last = self.db.execute("SELECT kind FROM message WHERE session_id = ? ORDER BY id DESC LIMIT 1", (r["id"],)).fetchone()
+            if not last or last["kind"] != "check_done":
+                self.add_message(r["id"], "tutor", "Every concept is at Spot. Practice is unlocked.", kind="check_done", phase="check")
+            return
+        if state["total"] >= chk.MAX_QUESTIONS_PER_SITTING:
+            raise TransitionError("That is enough for one sitting. Take a short break, then press “Keep checking”.")
+        concept, level = t
+        asked = state["asked"].get(str(concept["id"]), [])
+        q = chk.make_question(self.ctx(r), concept, level, asked)
+        state["current"] = {"concept_id": concept["id"], "level": level, "prompt": q["prompt"], "answer_key": q["answer_key"], "attempts": 0, "hint_shown": False}
+        state["asked"].setdefault(str(concept["id"]), []).append(q["prompt"])
+        state["total"] += 1
+        self.add_message(r["id"], "tutor", q["prompt"], kind="check_question", phase="check",
+                         meta={"concept": concept["name"], "concept_id": concept["id"], "level": level, "options": chk.options(q["prompt"]), "n": state["total"]})
+        self._save_check(r["id"], state)
+
+    def _do_check_answer(self, r, text):
+        state = chk.load_state(r["check_json"])
+        cur = state["current"]
+        if not cur:
+            raise TransitionError("There is no question to answer. Press “Next question”.")
+        if not text:
+            raise TransitionError("Write your answer first.")
+        concept = self._concept(cur["concept_id"])
+        ctx = self.ctx(r)
+        verdict = chk.judge(ctx, concept, cur["level"], cur, text)            # model calls first, so a failure writes nothing
+        now = self.clock()
+        wrong_total = cur["attempts"] + 1
+        reteach = None
+        if not verdict.correct and wrong_total >= chk.WRONG_BEFORE_RETEACH:
+            reteach = chk.reteach(ctx, concept, f"They answered: {text[:300]}")
+        hint = ""
+        if not verdict.correct and reteach is None:
+            hint = (verdict.hint or "").strip() or chk.make_hint(ctx, concept, cur)
+        self.add_message(r["id"], "user", text, kind="check_answer", phase="check")
+        if verdict.correct:
+            chk.set_level(self.db, concept["id"], "define" if cur["level"] == "define" else "spot", now)
+            state["current"] = None
+            self.add_message(r["id"], "tutor", verdict.feedback.strip() or "Correct.", kind="check_result", phase="check",
+                             meta={"correct": True, "concept": concept["name"], "level": cur["level"]})
+        elif reteach is None:
+            chk.set_level(self.db, concept["id"], "none", now, confused_with=verdict.confused_with)
+            cur["attempts"], cur["hint_shown"] = wrong_total, True
+            self.add_message(r["id"], "tutor", f"{verdict.feedback.strip()}\nHint: {hint}".strip(), kind="check_result", phase="check",
+                             meta={"correct": False, "concept": concept["name"], "level": cur["level"], "hint": hint})
+        else:
+            chk.set_level(self.db, concept["id"], "none", now, confused_with=verdict.confused_with)
+            _, hits = chk.definition_block(self.db, concept)
+            cites = [{"citation": cite(h), "chunk_id": h.chunk_id} for h in hits[:1]]
+            answer = f"{verdict.feedback.strip()}\nThe answer: {cur['answer_key']} {cites[0]['citation'] if cites else ''}".strip()
+            self.add_message(r["id"], "tutor", answer, kind="check_result", phase="check", citations=cites,
+                             meta={"correct": False, "revealed": True, "concept": concept["name"], "level": cur["level"]})
+            body = reteach["text"] + (f"\n\nExample: {reteach['example']}" if reteach["example"] else "")
+            self.add_message(r["id"], "tutor", body, kind="check_reteach", phase="check", citations=reteach["citations"], meta={"concept": concept["name"]})
+            state["current"] = None
+        self._save_check(r["id"], state)
+
+    def _do_check_hint(self, r, _text):
+        state = chk.load_state(r["check_json"])
+        cur = state["current"]
+        if not cur:
+            raise TransitionError("There is no question to give a hint for.")
+        if cur["hint_shown"]:
+            raise TransitionError("You already have a hint for this question.")
+        hint = chk.make_hint(self.ctx(r), self._concept(cur["concept_id"]), cur)
+        cur["hint_shown"] = True
+        self.add_message(r["id"], "tutor", f"Hint: {hint}", kind="check_hint", phase="check", meta={"concept": self._concept(cur["concept_id"])["name"]})
+        self._save_check(r["id"], state)
+
+    def _do_check_more(self, r, _text):
+        state = chk.load_state(r["check_json"])
+        state["total"] = 0
+        self._save_check(r["id"], state)
 
     # --- pass
     def _complete(self, r) -> None:

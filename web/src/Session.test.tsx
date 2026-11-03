@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Msg, SessionPhase, SessionView } from "./api";
+import type { FbMeta, Msg, SessionPhase, SessionView } from "./api";
 import Session from "./pages/Session";
 
 const principles = [
@@ -18,7 +18,8 @@ const view = (o: Partial<SessionView> = {}): SessionView => ({
   timer: { limit_s: 0, elapsed_s: 0, running: false, left_s: null, overtime_s: 0 }, diagnosis: null,
   gate: { unlocked: false, done: 0, total: 2, message: "Practice unlocks when all 2 concepts reach Spot. 0 of 2 done. Missing: obstacle, want.", missing: [],
     concepts: [{ id: 1, name: "want", level: "none" }, { id: 2, name: "obstacle", level: "define" }] },
-  messages: [], allowed: ["begin", "answer", "advance", "ask", "pause_timer", "resume_timer", "heartbeat"], ...o,
+  messages: [], allowed: ["begin", "answer", "advance", "ask", "pause_timer", "resume_timer", "heartbeat"],
+  check: null, feedback_pending: false, feedback_error: null, route: null, route_concepts: [], ...o,
 });
 const task = { title: "Rewrite the kitchen scene", instructions: "Mai wants the recipe tin.", support: "beat template", template: ["Show the want", "First block"], minutes: 20, attempt: 1 };
 
@@ -147,7 +148,7 @@ describe("Practice", () => {
   });
 
   it("restores a saved draft, saves while you type, and submits the text", async () => {
-    const f = mock(api(practice({ draft: "INT. KITCHEN" }), (b) => (b.action === "submit" ? practice({ phase: "feedback", attempt: 1, draft: "" }) : practice())));
+    const f = mock(api(practice({ draft: "INT. KITCHEN" }), (b) => (b.action === "submit" ? practice({ phase: "feedback", attempt: 1, draft: "", feedback_pending: true }) : practice())));
     wrap();
     const box = await screen.findByLabelText("Your work");
     expect(box).toHaveValue("INT. KITCHEN");
@@ -200,5 +201,160 @@ describe("Pass", () => {
     expect(await screen.findByText("Write subtext")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Choose your next skill" })).toHaveAttribute("href", "/new");
     expect(f.mock.calls.some((c) => c[0] === "/api/sessions/1/next")).toBe(true);
+  });
+});
+
+
+// ---------- the foundations check
+
+const checkView = (cur: Partial<NonNullable<SessionView["check"]>["current"]> | null, o: Partial<SessionView> = {}) => view({
+  phase: "check", allowed: ["check", "check_answer", "check_hint", "check_more", "unlock", "ask", "heartbeat"],
+  check: { current: cur ? { concept: "obstacle", concept_id: 2, level: "spot", prompt: "Which reply shifts the upper hand?\nA. MAI: Please.\nB. MAI: Then you tell me when.", options: ["A. MAI: Please.", "B. MAI: Then you tell me when."], attempts: 0, hint_shown: false, ...cur } : null,
+    remaining_minutes: 3, budget_left: 10, all_done: false }, ...o,
+});
+
+describe("Foundations check", () => {
+  it("asks a spot question as choices, and sends the chosen one", async () => {
+    const f = mock(api(checkView({})));
+    wrap();
+    const send = await screen.findByRole("button", { name: "Check answer" });
+    expect(send).toBeDisabled();
+    expect(screen.getByText(/about 3 min/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "B. MAI: Then you tell me when." }));
+    expect(send).toBeEnabled();
+    await userEvent.click(send);
+    expect(acts(f)).toEqual([{ action: "check_answer", text: "B. MAI: Then you tell me when." }]);
+  });
+
+  it("asks a define question as free text, and offers one hint before the answer is shown", async () => {
+    const f = mock(api(checkView({ level: "define", prompt: "What is an obstacle?", options: [] })));
+    wrap();
+    await userEvent.type(await screen.findByLabelText("Your answer, in your own words"), "what pushes back");
+    await userEvent.click(screen.getByRole("button", { name: "Check answer" }));
+    await userEvent.click(screen.getByRole("button", { name: "Hint" }));
+    expect(acts(f)).toEqual([{ action: "check_answer", text: "what pushes back" }, { action: "check_hint", text: "" }]);
+  });
+
+  it("disables the hint once it has been given", async () => {
+    mock(api(checkView({ hint_shown: true })));
+    wrap();
+    expect(await screen.findByRole("button", { name: "Hint" })).toBeDisabled();
+  });
+
+  it("asks for the next question when none is open, and keeps practice locked with the reason", async () => {
+    const f = mock(api(checkView(null)));
+    wrap();
+    await userEvent.click(await screen.findByRole("button", { name: "Next question" }));
+    expect(acts(f)).toEqual([{ action: "check", text: "" }]);
+    const locked = screen.getByRole("button", { name: "Practice is locked" });
+    expect(locked).toBeDisabled();
+    expect(locked).toHaveAccessibleDescription(/Practice unlocks when all 2 concepts reach Spot/);
+  });
+
+  it("lets you keep going after a long sitting", async () => {
+    const f = mock(api(checkView(null, { check: { current: null, remaining_minutes: 2, budget_left: 0, all_done: false } })));
+    wrap();
+    expect(await screen.findByText(/enough for one sitting/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Keep checking" }));
+    expect(acts(f)).toEqual([{ action: "check_more", text: "" }]);
+  });
+
+  it("unlocks the next attempt once the concept is back at Spot", async () => {
+    const unlocked = { unlocked: true, done: 2, total: 2, message: null, missing: [], concepts: [{ id: 1, name: "want", level: "spot" }, { id: 2, name: "obstacle", level: "spot" }] };
+    mock(api(checkView(null, { attempt: 1, gate: unlocked, check: { current: null, remaining_minutes: 0, budget_left: 10, all_done: true } })));
+    wrap();
+    expect(await screen.findByRole("button", { name: "Start the next attempt" })).toBeEnabled();
+  });
+});
+
+// ---------- feedback
+
+const fbMeta = (o: Partial<FbMeta> = {}): FbMeta => ({
+  version: 2, passed: false, summary: "Not passed yet: 1 of 3 principles followed.", since: "Improved: principle 2.",
+  results: [
+    { n: 1, principle: "The want is clear in the first beat", result: "followed", comment: "Mai reaching for the tin shows it.", quote: "Mai reaches for the tin", locator: "Line 2", citation: "[Book A, ch. 3, p. 41]", chunk_id: 5 },
+    { n: 2, principle: "The obstacle pushes back", result: "partly", comment: "Grandma blocks once.", quote: "Grandma slides the tin", locator: "Line 3", citation: "[Book A, ch. 4, p. 60]", chunk_id: 6 },
+    { n: 3, principle: "The scene ends on a change", result: "not", comment: "", quote: "", locator: null, citation: "[Book A, ch. 5, p. 70]", chunk_id: 7 },
+  ],
+  fixes: [{ n: 3, fix: "End on a beat where her want changes.", example: "She starts writing the recipe down.", citation: "[Book A, ch. 5, p. 70]", chunk_id: 7, principle: "The scene ends on a change" }],
+  mistakes: [{ n: 3, kind: "execution", concept: null, tag: "weak ending", count: 2 }], diff: null, ...o,
+});
+const fbView = (o: Partial<SessionView> = {}, meta: Partial<FbMeta> = {}) => view({
+  phase: "feedback", attempt: 2, next_attempt: 3, route: "revise", allowed: ["feedback", "revise", "reteach", "pass", "ask", "heartbeat"],
+  messages: [msg({ id: 9, kind: "feedback", phase: "feedback", content: "Not passed yet", meta: fbMeta(meta) as unknown as Msg["meta"],
+    citations: [{ citation: "[Book A, ch. 3, p. 41]", chunk_id: 5 }] })], ...o,
+});
+
+describe("Feedback", () => {
+  it("shows every principle with a verdict in words, its citation, the line, and the fix", async () => {
+    mock(api(fbView()));
+    wrap();
+    expect(await screen.findByRole("heading", { name: "Not passed yet: 1 of 3 principles followed." })).toBeInTheDocument();
+    const rows = within(screen.getByRole("list", { name: "Principle checklist" })).getAllByRole("listitem");
+    expect(rows).toHaveLength(3);
+    expect(within(rows[0]).getByText("Followed")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("Line 2")).toBeInTheDocument();
+    expect(within(rows[0]).getByRole("button", { name: "[Book A, ch. 3, p. 41]" })).toBeInTheDocument();
+    expect(within(rows[1]).getByText("Partly")).toBeInTheDocument();
+    expect(within(rows[2]).getByText("Not followed")).toBeInTheDocument();
+    const fixes = within(screen.getByLabelText("Fixes"));
+    expect(fixes.getByText(/End on a beat where her want changes/)).toBeInTheDocument();
+    expect(fixes.getByRole("button", { name: "[Book A, ch. 5, p. 70]" })).toBeInTheDocument();
+    expect(screen.getByText("Improved: principle 2.")).toBeInTheDocument();
+    expect(screen.getByText(/Recurring mistake: weak ending/)).toBeInTheDocument();
+  });
+
+  it("sends an execution mistake straight back to revise", async () => {
+    const f = mock(api(fbView()));
+    wrap();
+    await userEvent.click(await screen.findByRole("button", { name: "Start attempt 3" }));
+    expect(acts(f)).toEqual([{ action: "revise", text: "" }]);
+  });
+
+  it("sends a concept mistake to a re-teach first", async () => {
+    const f = mock(api(fbView({ route: "reteach", route_concepts: ["obstacle"] })));
+    wrap();
+    expect(await screen.findByText(/A concept needs another look before your next attempt/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Start attempt/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Re-teach obstacle" }));
+    expect(acts(f)).toEqual([{ action: "reteach", text: "" }]);
+  });
+
+  it("offers to finish the skill only when every principle is followed", async () => {
+    const f = mock(api(fbView({ route: "pass" }, { passed: true, summary: "Passed: every principle is followed." })));
+    wrap();
+    await userEvent.click(await screen.findByRole("button", { name: "Finish this skill" }));
+    expect(acts(f)).toEqual([{ action: "pass", text: "" }]);
+  });
+
+  it("keeps your work and offers 'Get feedback' when feedback could not be given", async () => {
+    const f = mock(api(view({ phase: "feedback", attempt: 1, feedback_pending: true, feedback_error: "The language model could not be reached.",
+      messages: [msg({ id: 1, role: "user", kind: "submission", phase: "practice", content: "INT. KITCHEN", meta: { version: 1, minutes: 12 } })] })));
+    wrap();
+    expect(await screen.findByText(/Attempt 1 is saved. The language model could not be reached./)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Get feedback" }));
+    expect(acts(f)).toEqual([{ action: "feedback", text: "" }]);
+  });
+
+  it("compares two attempts line by line, saying added and removed in words", async () => {
+    mock((url, init) => (url === "/api/sessions/1/compare?a=1&b=2"
+      ? { a: { version: 1, text: "" }, b: { version: 2, text: "" }, lines: [{ op: " ", text: "kept line" }, { op: "-", text: "old line" }, { op: "+", text: "new line" }] }
+      : api(fbView())(url, init)));
+    wrap();
+    await userEvent.click(await screen.findByRole("button", { name: "Compare attempts" }));
+    const dlg = within(await screen.findByRole("dialog", { name: "Attempt 1 to attempt 2" }));
+    expect(dlg.getByText("Added:")).toBeInTheDocument();
+    expect(dlg.getByText("Removed:")).toBeInTheDocument();
+    expect(dlg.getByText("kept line")).toBeInTheDocument();
+    await userEvent.click(dlg.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("starts a revision from the work you handed in", async () => {
+    mock(api(view({ phase: "revise", task, attempt: 1, next_attempt: 2, timer: { limit_s: 1200, elapsed_s: 0, running: true, left_s: 1200, overtime_s: 0 },
+      messages: [msg({ id: 1, role: "user", kind: "submission", phase: "practice", content: "INT. KITCHEN - NIGHT\nMai reaches.", meta: { version: 1, minutes: 12 } })] })));
+    wrap();
+    expect(await screen.findByLabelText("Your work")).toHaveValue("INT. KITCHEN - NIGHT\nMai reaches.");
+    expect(screen.getByRole("button", { name: "Submit attempt 2" })).toBeEnabled();
   });
 });
