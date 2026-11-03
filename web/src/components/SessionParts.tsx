@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { api, type FbMeta, type Msg, type SessionPhase } from "../api";
+import { api, type Asset, type FbMeta, type Msg, type SessionPhase } from "../api";
 import { FeedbackView } from "./FeedbackView";
 
 export const PHASES: { key: SessionPhase; label: string }[] = [
@@ -77,7 +77,16 @@ export function MessageView({ m, onOpen }: { m: Msg; onOpen: (chunkId: number) =
     return (
       <article className="card msg user" aria-label={m.kind === "submission" ? `Attempt ${String(m.meta.version)}` : "You"}>
         <div className="eyebrow">{m.kind === "submission" ? `Attempt ${String(m.meta.version)} · ${String(m.meta.minutes)} min` : m.kind === "question" ? "Your question" : "You"}</div>
-        <p className={m.kind === "submission" ? "mono" : undefined}>{m.content}</p>
+        {m.content && <p className={m.kind === "submission" ? "mono" : undefined}>{m.content}</p>}
+        {m.kind === "submission" && Array.isArray(m.meta.assets) && (m.meta.assets as Asset[]).length > 0 && (
+          <ul className="list" aria-label="Attachments" style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {(m.meta.assets as Asset[]).map((a) => (
+              <li key={a.id} className="small" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {a.thumb && <img src={a.thumb} alt="" width={64} height={40} style={{ objectFit: "cover", borderRadius: 4 }} />}<span className="mono">{a.filename}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </article>
     );
   }

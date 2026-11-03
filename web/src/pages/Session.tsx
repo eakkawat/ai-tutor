@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api, ApiError, type SessionView } from "../api";
+import { Attachments } from "../components/Attachments";
 import { CheckPanel } from "../components/CheckPanel";
 import { MessageView, mmss, PhaseStepper, SourcePanel, useTick } from "../components/SessionParts";
 
@@ -30,10 +31,16 @@ function Pass({ v }: { v: SessionView }) {
 export default function Session() {
   const id = Number(useParams().id);
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["session", id], queryFn: () => api.session(id), retry: false });
+  const q = useQuery({
+    queryKey: ["session", id], queryFn: () => api.session(id), retry: false,
+    refetchInterval: (query) => (query.state.data?.assets.some((a) => a.status === "processing") ? 1500 : false),     // clips are processed in the background
+  });
+  const setup = useQuery({ queryKey: ["setup"], queryFn: () => api.setupStatus(true), retry: false });
+  const mediaEnabled = setup.data?.media_enabled ?? true;
   const v = q.data;
   const [panel, setPanel] = useState<number | null>(null);
   const [comparing, setComparing] = useState(false);
+  const vision = useQuery({ queryKey: ["vision"], queryFn: api.vision, retry: false, enabled: q.data?.phase === "practice" || q.data?.phase === "revise" });
   const [text, setText] = useState("");
   const [question, setQuestion] = useState("");
   const [last, setLast] = useState<{ action: string; text?: string } | null>(null);
@@ -63,6 +70,8 @@ export default function Session() {
   }, [text, timed, id]);
 
   // While the clock runs, tell the server the screen is still here.
+  const waiting = v?.assets.some((a) => a.status === "processing") ?? false;
+  const failed = v?.assets.some((a) => a.status === "error") ?? false;
   const running = v?.timer.running === true;
   useEffect(() => {
     if (!running) return;
@@ -133,7 +142,11 @@ export default function Session() {
               {v.task.template.length > 0 && <ol className="small" style={{ margin: 0 }}>{v.task.template.map((b) => <li key={b}>{b}</li>)}</ol>}
               <label htmlFor="work">Your work</label>
               <textarea id="work" className="bigtext" value={text} onChange={(e) => setText(e.target.value)} />
-              <div><button type="submit" className="btn primary" disabled={busy || !text.trim()}>Submit attempt {v.next_attempt}</button></div>
+              <Attachments sessionId={v.id} assets={v.assets} mediaEnabled={mediaEnabled} vision={vision.data?.vision ?? null} />
+              {waiting && <p id="why-wait" role="status" className="small muted" style={{ margin: 0 }}>A clip is still being processed on this computer. It sends when that finishes.</p>}
+              {failed && <p id="why-failed" role="status" className="small error" style={{ margin: 0 }}>A clip could not be processed. Try it again or remove it.</p>}
+              <div><button type="submit" className="btn primary" aria-describedby={waiting ? "why-wait" : failed ? "why-failed" : undefined}
+                disabled={busy || waiting || failed || !(text.trim() || v.assets.length > 0)}>Submit attempt {v.next_attempt}</button></div>
             </form>
           )}
           {v.phase === "feedback" && !v.ended && v.feedback_pending && (

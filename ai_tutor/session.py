@@ -9,6 +9,7 @@ import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
+from . import assets as assetlib
 from . import check as chk
 from . import feedback as fbk
 from . import skills as sk
@@ -72,8 +73,8 @@ def practice_gate(db: sqlite3.Connection, skill_id: int) -> dict:
 
 class SessionService:
     def __init__(self, db: sqlite3.Connection, *, llm: LLMClient | None, embedder: Embedder | None, clock: Clock = utcnow,
-                 log_path=None):
-        self.db, self.llm, self.embedder, self.clock, self.log_path = db, llm, embedder, clock, log_path
+                 log_path=None, vision: Callable[[], bool | None] = lambda: None):
+        self.db, self.llm, self.embedder, self.clock, self.log_path, self.vision = db, llm, embedder, clock, log_path, vision
 
     # ---------- reading
     def row(self, session_id: int) -> sqlite3.Row:
@@ -116,7 +117,7 @@ class SessionService:
             "difficulty": ls["difficulty_current"] if ls else 3, "hours": round(ls["hours_total"], 2) if ls else 0.0,
             "task": json.loads(r["task_json"]) if r["task_json"] else None, "draft": r["draft_text"], "timer": self.timer(r),
             "diagnosis": json.loads(r["diagnosis_json"]) if r["diagnosis_json"] else None,
-            "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs, **self._extras(r, msgs),
+            "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs, "assets": assetlib.draft_assets(self.db, session_id), **self._extras(r, msgs),
             "allowed": sorted(ALLOWED[r["phase"]] | ANYTIME) if not r["ended_at"] else ["ask"],
         }
 
@@ -298,22 +299,27 @@ class SessionService:
         self._seen(r)
 
     def _do_submit(self, r, text):
-        if not text:
-            raise TransitionError("Write something to submit first.")
-        if fbk.too_short(text):
+        try:
+            attached = assetlib.check_ready(self.db, r["id"])      # a clip still processing, or one that failed, holds the submission back
+        except assetlib.AssetError as e:
+            raise TransitionError(str(e)) from e
+        if not text and not attached:
+            raise TransitionError("Write something, or add a picture or clip, to submit first.")
+        if not attached and fbk.too_short(text):
             raise TransitionError("That is too short to give feedback on. Add more of your work, then submit again.")
         elapsed = self._elapsed(r)
         limit = r["timer_limit_s"]
         over = max(0.0, elapsed - limit) if limit else 0.0
         attempt = r["attempt"] + 1
         sub = self.db.execute("INSERT INTO submission(session_id, version, text) VALUES (?,?,?)", (r["id"], attempt, text)).lastrowid
+        snapshot = assetlib.attach(self.db, r["id"], sub)
         self.db.execute(
             "UPDATE session SET attempt = ?, phase = 'feedback', draft_text = '', timer_elapsed_s = 0, timer_since = NULL, "
             "overtime_s = overtime_s + ?, minutes = minutes + ? WHERE id = ?", (attempt, over, elapsed / 60, r["id"]))
         self.db.execute("UPDATE learner_skill SET hours_total = hours_total + ?, last_session_at = ? WHERE skill_id = ?",
                         (elapsed / 3600, iso(self.clock()), r["skill_id"]))
         self.add_message(r["id"], "user", text, kind="submission", phase=r["phase"],
-                         meta={"submission_id": sub, "version": attempt, "minutes": round(elapsed / 60, 1), "overtime_s": int(over)})
+                         meta={"submission_id": sub, "version": attempt, "minutes": round(elapsed / 60, 1), "overtime_s": int(over), "assets": snapshot})
         self.db.commit()
         try:                                                  # feedback right after every submission; the work is kept even if it cannot be given now
             self._give_feedback(r["id"])
@@ -340,8 +346,12 @@ class SessionService:
         r = self.row(session_id)
         sub = self._latest_submission(session_id)
         ctx = self.ctx(r)
+        bundle = assetlib.bundle_for(self.db, sub["id"])
+        if not bundle.empty():
+            ctx.vision = self.vision()                         # False only when the server says the model cannot read pictures
         prev_text, before = fbk.previous_text(self.db, session_id, sub["version"])
-        out = fbk.generate(ctx, task=json.loads(r["task_json"]) if r["task_json"] else None, work=sub["text"], attempt=sub["version"], previous=prev_text)
+        out = fbk.generate(ctx, task=json.loads(r["task_json"]) if r["task_json"] else None, work=sub["text"] or "", attempt=sub["version"],
+                           previous=prev_text, bundle=bundle)
         diff, since = None, ""
         if sub["version"] > 1 and before:
             old = self.db.execute("SELECT text FROM submission WHERE session_id = ? AND version < ? ORDER BY version DESC LIMIT 1", (session_id, sub["version"])).fetchone()

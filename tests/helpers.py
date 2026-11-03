@@ -109,11 +109,13 @@ class SmartBackend:
         import collections
         self.session = session or {}
         self.users = []
+        self.images_seen = []
         self.triage, self.skills, self.concepts, self.merge, self.recommend = triage, skills or (lambda *a: []), concepts, merge, recommend
         self.calls, self.fail_on, self.labels = collections.Counter(), fail_on, []
 
     def complete(self, system, user, *, json_mode, images=None):
         import json
+        self.images_seen.append(images or [])
         data = user.split('<data label="book text">')[-1] if '<data label="book text">' in user else ""
         ids = [int(x) for x in re.findall(r"^\[c(\d+)\] ", data, re.MULTILINE)]       # the instructions also mention "[c12]" as an example
         if "You decide whether a book can teach" in user:

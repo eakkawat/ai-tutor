@@ -13,13 +13,14 @@ dependencies = [
   "sqlite-vec>=0.1.9",
   "python-multipart>=0.0.32",
   "numpy>=1.26",
+  "pillow>=10.0",
 ]
 
 [project.optional-dependencies]
 # Local embeddings (TASKS_002): uv sync --extra embed. Run in float32 or bfloat16, never float16.
 embed = ["sentence-transformers>=6.1", "transformers>=5.0", "torch>=2.4", "torchvision>=0.19", "pillow>=10.0"]
 # Video transcripts (TASKS_007): uv sync --extra media
-media = ["faster-whisper>=1.0"]
+media = ["faster-whisper>=1.0", "av>=11,<17"]   # newer av releases break faster-whisper (open() has no metadata_errors)
 
 [dependency-groups]
 dev = [

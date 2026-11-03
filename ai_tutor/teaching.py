@@ -97,6 +97,7 @@ class Ctx:
     project: dict
     session_id: int
     profile: str = ""
+    vision: bool | None = None          # can the configured model read pictures? None = not known
     extra: dict = field(default_factory=dict)
 
 
@@ -207,10 +208,10 @@ def _llm(ctx: Ctx) -> LLMClient:
     return ctx.llm
 
 
-def _ask(ctx: Ctx, schema, prompt_name: str, job: str, **values):
+def _ask(ctx: Ctx, schema, prompt_name: str, job: str, images: list[str] | None = None, **values):
     prompt = load_prompt(prompt_name)
     try:
-        return _llm(ctx).json(schema, prompt.render(**{**base_values(ctx), **values}), prompt_version=prompt.version, job=job)
+        return _llm(ctx).json(schema, prompt.render(**{**base_values(ctx), **values}), prompt_version=prompt.version, job=job, images=images)
     except LLMError as e:
         kind = "could not be reached" if type(e).__name__ == "LLMPausedError" else "gave an answer I could not use"
         raise TutorError(f"The language model {kind}. Nothing was changed; try again. ({e})") from e

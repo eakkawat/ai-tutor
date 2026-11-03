@@ -13,6 +13,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from . import media
+from .assets import Bundle
 from .citations import CITATION
 from .llm.prompts import fence
 from .teaching import Ctx, TutorError, _ask, concepts_text, count_words, diagnosis_text, trim_words
@@ -29,6 +31,11 @@ class FbPrinciple(BaseModel):
     result: str
     quote: str = ""
     comment: str = ""
+    kind: str = "line"                     # line (text) | image | video
+    asset: int | None = None               # the IMAGE or VIDEO number in the prompt
+    region: list[float] | None = None      # image: [x, y, width, height] as fractions of the picture
+    start_s: float | None = None           # video: where it happens, in seconds
+    end_s: float | None = None
 
 
 class FbFix(BaseModel):
@@ -151,27 +158,75 @@ def line_diff(old: str, new: str) -> list[dict]:
     return out
 
 
-def generate(ctx: Ctx, *, task: dict | None, work: str, attempt: int, previous: str) -> dict:
+def generate(ctx: Ctx, *, task: dict | None, work: str, attempt: int, previous: str, bundle: Bundle | None = None) -> dict:
     """Ask for feedback and check it. Raises TutorError (nothing stored) if the verdicts are incomplete after one more try."""
     skill = ctx.skill
+    bundle = bundle or Bundle()
+    if not bundle.empty() and ctx.vision is False:
+        raise TutorError("The language model you set up cannot read pictures, so I cannot judge the pictures or clips in this attempt. "
+                         "Switch to a model that can read images in Setup, or remove them and submit the text.", retryable=False)
     n_total = len(skill["principles"])
     principles = "\n".join(f"{i}. {p['principle']} (test: {p['test']}) {p['citation'] or ''}" for i, p in enumerate(skill["principles"], 1))
-    values = {"attempt": str(attempt), "task": fence("task", (task or {}).get("instructions", "(none)")), "work": fence("learner work", numbered(work)),
+    values = {"attempt": str(attempt), "task": fence("task", (task or {}).get("instructions", "(none)")),
+              "work": fence("learner work", numbered(work) if work.strip() else "(no text: the work is in the pictures or clips)"),
+              "attachments": fence("attachments", bundle.prompt_text()),
               "concepts": concepts_text(ctx.db, skill["id"]), "previous": fence("previous feedback", previous or "(none: this is the first attempt)"),
               "diagnosis": fence("diagnosis", diagnosis_text(ctx.db, ctx.session_id))}
     note = ""
     for _ in (1, 2):
-        out = _ask(ctx, FeedbackOut, "feedback", "feedback", principles=principles + note, **values)
+        out = _ask(ctx, FeedbackOut, "feedback", "feedback", images=bundle.data_urls() or None, principles=principles + note, **values)
         seen = [p.n for p in out.principles]
         if sorted(seen) == list(range(1, n_total + 1)):
-            return _check(ctx, out, work)
+            return _check(ctx, out, work, bundle)
         missing = sorted(set(range(1, n_total + 1)) - set(seen))
         note = (f"\n\nYour last reply did not give exactly one verdict for every numbered principle (missing: {missing or 'none'}; "
                 "repeated or unknown numbers are not allowed).")
     raise TutorError("The feedback came back incomplete: not every principle got a verdict. Nothing was saved; try again.")
 
 
-def _check(ctx: Ctx, out: FeedbackOut, work: str) -> dict:
+def _position(region: list[float]) -> str:
+    """'upper left', 'centre', 'lower right'... from the middle of the region, so a locator can name the part of the picture."""
+    cx, cy = region[0] + region[2] / 2, region[1] + region[3] / 2
+    v = "upper" if cy < 0.34 else "lower" if cy > 0.66 else ""
+    h = "left" if cx < 0.34 else "right" if cx > 0.66 else ""
+    return " ".join(x for x in (v, h) if x) or "centre"
+
+
+def _num(x) -> float | None:
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return None
+
+
+def media_evidence(v: FbPrinciple, bundle: Bundle) -> dict | None:
+    """Evidence that points into a picture or a clip, checked against what was actually attached. None if it points at nothing real."""
+    if v.kind == "image":
+        img = bundle.image(v.asset)
+        if img is None:
+            return None
+        region = None
+        if v.region and len(v.region) == 4 and all(_num(x) is not None for x in v.region):
+            x, y, w, h = (float(t) for t in v.region)
+            if 0 <= x < 1 and 0 <= y < 1 and w > 0 and h > 0:
+                region = [round(x, 3), round(y, 3), round(min(w, 1 - x), 3), round(min(h, 1 - y), 3)]
+        where = f"Image {img['n']}" + (f", {_position(region)}" if region else "")
+        return {"kind": "image", "n": img["n"], "asset_id": img["asset_id"], "filename": img["filename"], "region": region, "locator": where}
+    if v.kind == "video":
+        vid = bundle.video(v.asset)
+        a, b = _num(v.start_s), _num(v.end_s if v.end_s is not None else v.start_s)
+        if vid is None or a is None or b is None or not vid["frames"]:
+            return None
+        a, b = max(0.0, min(a, b)), min(float(vid["duration"]), max(a, b))
+        if a > vid["duration"]:
+            return None
+        inside = [f for f in vid["frames"] if a - 1.0 <= f["t"] <= b + 1.0] or [min(vid["frames"], key=lambda f: abs(f["t"] - (a + b) / 2))]
+        return {"kind": "video", "n": vid["n"], "asset_id": vid["asset_id"], "filename": vid["filename"], "start_s": a, "end_s": b,
+                "frames": [{"id": f["id"], "idx": f["idx"], "t": f["t"]} for f in inside[:4]], "locator": f"Video {vid['n']} · {media.fmt_range(a, b)}"}
+    return None
+
+
+def _check(ctx: Ctx, out: FeedbackOut, work: str, bundle: Bundle) -> dict:
     skill = ctx.skill
     by_n = {p.n: p for p in out.principles}
     results = []
@@ -179,13 +234,15 @@ def _check(ctx: Ctx, out: FeedbackOut, work: str) -> dict:
         v = by_n[i]
         result = v.result.strip().lower().replace("not followed", "not").replace("partially", "partly")
         result = result if result in RANK else "not"
-        span = locate(v.quote, work) if v.quote.strip() else None
+        kind = v.kind.strip().lower()
+        ev = media_evidence(v, bundle) if kind in ("image", "video") else None
+        span = locate(v.quote, work) if (ev is None and v.quote.strip()) else None
         comment = _short(v.comment, 40)
-        if result == "followed" and span is None:            # no findable evidence: it cannot count as followed
+        if result == "followed" and span is None and ev is None:          # no findable evidence: it cannot count as followed
             result, comment = "partly", "I could not find the evidence for this in your work, so it does not count as followed yet."
         results.append({"n": i, "principle_id": pr["id"], "principle": pr["principle"], "test": pr["test"], "result": result, "comment": comment,
-                        "quote": v.quote.strip() if span else "", "locator": locator_text(span), "span": list(span) if span else None,
-                        "citation": pr["citation"], "chunk_id": pr["chunk_id"]})
+                        "quote": v.quote.strip() if span else "", "locator": ev["locator"] if ev else locator_text(span), "span": list(span) if span else None,
+                        "evidence": ev, "citation": pr["citation"], "chunk_id": pr["chunk_id"]})
     failing = [r["n"] for r in results if r["result"] != "followed"]
     passed = not failing
     fixes = []
@@ -228,7 +285,7 @@ def save(db: sqlite3.Connection, submission_id: int, skill_id: int, fb: dict, no
     fid = db.execute("INSERT INTO feedback(submission_id, content, mistakes_json, passed) VALUES (?,?,?,?)",
                      (submission_id, fb["summary"], json.dumps(fb["mistakes"]), int(fb["passed"]))).lastrowid
     for r in fb["results"]:
-        ev = {"kind": "line", "quote": r["quote"], "start": r["span"][0], "end": r["span"][1]} if r["span"] else None
+        ev = r.get("evidence") or ({"kind": "line", "quote": r["quote"], "start": r["span"][0], "end": r["span"][1]} if r["span"] else None)
         db.execute("INSERT INTO principle_check(feedback_id, principle_id, result, evidence_ref, comment, locator) VALUES (?,?,?,?,?,?)",
                    (fid, r["principle_id"], r["result"], json.dumps(ev) if ev else None, r["comment"], r["locator"]))
     stamp = now.strftime("%Y-%m-%d %H:%M:%S")

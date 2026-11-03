@@ -1,4 +1,30 @@
-import type { FbMeta, FbResult } from "../api";
+import type { Evidence, FbMeta, FbResult } from "../api";
+
+const mmss = (t: number) => `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, "0")}`;
+
+/** Where in a picture or clip the verdict comes from: the part of the picture, or the frames from that moment, shown beside the comment. */
+function EvidenceView({ ev }: { ev: Evidence }) {
+  if (ev.kind === "image") {
+    const [x, y, w, h] = ev.region ?? [];
+    return (
+      <div style={{ position: "relative", width: 160, lineHeight: 0 }}>
+        <img src={`/api/assets/${ev.asset_id}/file?variant=thumb`} alt={`${ev.filename}`} width={160} style={{ borderRadius: 4, display: "block", maxWidth: "100%" }} />
+        {ev.region && <span role="img" aria-label={`Region in Image ${ev.n}`}
+          style={{ position: "absolute", left: `${x * 100}%`, top: `${y * 100}%`, width: `${w * 100}%`, height: `${h * 100}%`, border: "2px solid var(--accent)", background: "rgba(47,75,201,0.12)", borderRadius: 2 }} />}
+      </div>
+    );
+  }
+  return (
+    <div className="row" style={{ justifyContent: "flex-start", gap: 8, alignItems: "flex-start" }}>
+      {(ev.frames ?? []).map((f) => (
+        <figure key={f.id} style={{ margin: 0 }}>
+          <img src={`/api/frames/${f.id}`} alt={`Frame ${f.idx} of ${ev.filename} at ${mmss(f.t)}`} width={112} height={63} style={{ objectFit: "cover", borderRadius: 4, background: "var(--frame-placeholder)" }} />
+          <figcaption className="mono small muted">{mmss(f.t)}</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
 
 const PILL: Record<FbResult["result"], { text: string; tone: string }> = {
   followed: { text: "Followed", tone: "success" }, partly: { text: "Partly", tone: "warning" }, not: { text: "Not followed", tone: "danger" },
@@ -27,6 +53,7 @@ export function FeedbackView({ meta, onOpen }: { meta: FbMeta; onOpen: (chunkId:
                 {r.quote && <div className="mono muted" style={{ marginTop: 4 }}>“{r.quote}”</div>}
               </div>
             )}
+            {r.evidence && <div style={{ paddingLeft: 102 }}><EvidenceView ev={r.evidence} /></div>}
           </li>
         ))}
       </ul>

@@ -46,10 +46,20 @@ export type SessionView = {
   diagnosis: { can_do: string; gap: string; level: number; meets_all: boolean } | null;
   gate: Gate; messages: Msg[]; allowed: string[];
   check: { current: CheckQuestion | null; remaining_minutes: number; budget_left: number; all_done: boolean } | null;
-  feedback_pending: boolean; feedback_error: string | null; route: "pass" | "reteach" | "revise" | null; route_concepts: string[];
+  assets: Asset[]; feedback_pending: boolean; feedback_error: string | null; route: "pass" | "reteach" | "revise" | null; route_concepts: string[];
+};
+export type Asset = {
+  id: number; kind: "image" | "video"; filename: string; status: "processing" | "ready" | "error"; error: string | null; duration_s: number | null;
+  size_bytes: number; steps: { cuts?: StepState; frames?: StepState; transcript?: StepState } | null; notes: string[]; width: number | null; height: number | null;
+  downscaled: boolean; thumb: string | null; attached: boolean;
+};
+export type StepState = { status: "waiting" | "running" | "done" | "skipped"; count?: number; done?: number; total?: number; lines?: number; note?: string };
+export type Evidence = {
+  kind: "image" | "video"; n: number; asset_id: number; filename: string; locator: string;
+  region?: number[] | null; start_s?: number; end_s?: number; frames?: { id: number; idx: number; t: number }[];
 };
 export type CheckQuestion = { concept: string; concept_id: number; level: "define" | "spot"; prompt: string; options: string[]; attempts: number; hint_shown: boolean };
-export type FbResult = { n: number; principle: string; result: "followed" | "partly" | "not"; comment: string; quote: string; locator: string | null; citation: string | null; chunk_id: number };
+export type FbResult = { n: number; principle: string; result: "followed" | "partly" | "not"; comment: string; quote: string; locator: string | null; evidence?: Evidence | null; citation: string | null; chunk_id: number };
 export type FbFix = { n: number; fix: string; example: string; citation: string | null; chunk_id: number; principle: string };
 export type FbMeta = {
   version: number; passed: boolean; summary: string; results: FbResult[]; fixes: FbFix[]; since: string;
@@ -84,6 +94,17 @@ async function upload({ files, title, author }: { files: File[]; title?: string;
   if (!r.ok) {
     const d = (await r.json().catch(() => ({}))).detail;
     throw new ApiError(typeof d === "string" ? d : d?.message ?? `Upload failed (${r.status})`, d?.field);
+  }
+  return r.json();
+}
+
+async function uploadAsset(sessionId: number, file: File): Promise<Asset> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const r = await fetch(`/api/sessions/${sessionId}/assets`, { method: "POST", body: fd });       // no JSON header: the browser sets the boundary
+  if (!r.ok) {
+    const d = (await r.json().catch(() => ({}))).detail;
+    throw new ApiError(typeof d === "string" ? d : d?.message ?? `Upload failed (${r.status})`, d?.code);
   }
   return r.json();
 }
@@ -131,6 +152,10 @@ export const api = {
   act: (id: number, action: string, text = "") => call<SessionView>(`/api/sessions/${id}/act`, { method: "POST", body: JSON.stringify({ action, text }) }),
   saveDraft: (id: number, text: string) => call<{ ok: true }>(`/api/sessions/${id}/draft`, { method: "PUT", body: JSON.stringify({ text }) }),
   compare: (id: number, a: number, b: number) => call<Compare>(`/api/sessions/${id}/compare?a=${a}&b=${b}`),
+  uploadAsset,
+  removeAsset: (id: number) => call<{ ok: true }>(`/api/assets/${id}`, { method: "DELETE" }),
+  retryAsset: (id: number) => call<{ ok: true }>(`/api/assets/${id}/retry`, { method: "POST" }),
+  vision: () => call<{ vision: boolean | null }>("/api/setup/vision"),
   nextSkill: (id: number) => call<{ next: PickCard | null; note: string | null; all_passed: boolean }>(`/api/sessions/${id}/next`),
   feltWrong: (messageId: number, note: string) => call<{ ok: true }>(`/api/messages/${messageId}/felt-wrong`, { method: "POST", body: JSON.stringify({ note }) }),
   passage: (id: number) => call<Passage>(`/api/chunks/${id}`),

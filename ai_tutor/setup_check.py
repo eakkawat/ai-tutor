@@ -45,6 +45,32 @@ def verify_llm(cfg: app_settings.LlmConfig) -> KeyVerdict:
     return "ok"
 
 
+_vision_cache: dict[tuple[str, str], bool | None] = {}
+
+
+def model_supports_images(cfg: app_settings.LlmConfig | None) -> bool | None:
+    """Can the configured model read pictures? True/False when the server says (`architecture.input_modalities` in its model list),
+    None when it does not say or cannot be reached. Checked once per model and remembered."""
+    if cfg is None:
+        return None
+    key = (cfg.base_url, cfg.model)
+    if key in _vision_cache:
+        return _vision_cache[key]
+    import openai
+
+    answer: bool | None = None
+    try:
+        models = openai.OpenAI(base_url=cfg.base_url, api_key=cfg.api_key or "none", max_retries=0, timeout=10).models.list()
+        for m in models.data:
+            if m.id == cfg.model:
+                mods = ((getattr(m, "model_extra", None) or {}).get("architecture") or {}).get("input_modalities")
+                answer = ("image" in mods) if isinstance(mods, list) else None
+    except (openai.APIConnectionError, openai.APIStatusError):
+        return None                                            # not remembered: ask again next time
+    _vision_cache[key] = answer
+    return answer
+
+
 def whisper_model_cached() -> bool:
     """faster-whisper downloads its model from Hugging Face on first use. Look for one in the local cache."""
     hub = Path(os.environ.get("HF_HUB_CACHE") or Path(os.environ.get("HF_HOME") or "~/.cache/huggingface").expanduser() / "hub")

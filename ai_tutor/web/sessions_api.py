@@ -4,7 +4,7 @@ import sqlite3
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from .. import picker
+from .. import app_settings, picker, setup_check
 from ..session import SessionService, TransitionError
 from ..teaching import TutorError
 from ..worker import Worker
@@ -17,7 +17,8 @@ def service(request: Request) -> SessionService:
     llm = st.llm_factory(0)
     if llm is not None:
         llm.call_log = Worker._call_logger(st.db)
-    return SessionService(st.db, llm=llm, embedder=st.embedder(), clock=st.clock, log_path=st.paths.feedback_log)
+    return SessionService(st.db, llm=llm, embedder=st.embedder(), clock=st.clock, log_path=st.paths.feedback_log,
+                          vision=lambda: setup_check.model_supports_images(app_settings.llm_config()))
 
 
 def run(fn, *args, **kw):

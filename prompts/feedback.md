@@ -1,5 +1,5 @@
 ---
-version: v1
+version: v2
 ---
 {{persona}}
 
@@ -20,6 +20,9 @@ Attempt: {{attempt}}
 ## Their work, with line numbers
 {{work}}
 
+## Pictures and clips they attached
+{{attachments}}
+
 ## Concepts this skill rests on
 {{concepts}}
 
@@ -30,7 +33,11 @@ Attempt: {{attempt}}
 {{profile}}
 
 Return:
-- `principles`: one entry for **every** numbered principle, each exactly once. `n`; `result` ("followed", "partly" or "not"); `quote`: a short exact quote from their work that shows your verdict (required for followed and partly; empty only when nothing in the work addresses the principle); `comment`: one sentence on what the work does for this principle.
+- `principles`: one entry for **every** numbered principle, each exactly once. `n`; `result` ("followed", "partly" or "not"); `comment`: one sentence on what the work does for this principle; and the evidence for your verdict, which is required for followed and partly (empty only when nothing in the work addresses the principle):
+  - text: `kind` "line" and `quote`, a short exact quote from their text.
+  - a picture: `kind` "image", `asset` (the IMAGE number) and `region`, [x, y, width, height] as fractions of the picture from 0 to 1 around the part you mean.
+  - a clip: `kind` "video", `asset` (the VIDEO number), and `start_s` and `end_s`, the seconds where it happens, using the frame times and transcript given.
+  Point to a specific part, never to "the whole picture". Judge pictures and clips only by what you can see and read in them.
 - `fixes`: the top one or two things to fix, each tied to a principle that is not followed. `n` (the principle number), `fix` (what to change, at most 30 words), `example` (an optional tiny example, at most 25 words, or empty).
 - `mistakes`: one entry for each principle that is not followed. `n`; `kind`: "concept" if they misunderstood an idea, "execution" if they knew it but did not do it; `concept`: the name of the misunderstood concept from the list above (only for kind "concept", else null); `tag`: two to four words naming the mistake, such as "weak ending".
 - `concepts_shown`: names of concepts from the list above that their work clearly **applies** correctly.
