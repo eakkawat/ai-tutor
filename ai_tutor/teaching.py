@@ -138,10 +138,10 @@ def persona() -> str:
     return load_prompt("persona").render(rule=DATA_RULE)
 
 
-def profile_summary(db: sqlite3.Connection) -> str:
-    """What the app has learned about how this learner learns (grows in TASKS_009)."""
-    rows = db.execute("SELECT key, value FROM profile_note ORDER BY updated_at DESC LIMIT 20").fetchall()
-    return "\n".join(f"- {r['key']}: {r['value']}" for r in rows) or "(nothing learned yet)"
+def profile_summary(db: sqlite3.Connection, skill_id: int | None = None) -> str:
+    """What the app knows about how this learner learns (see profile.py): bounded, the learner's own notes first."""
+    from . import profile
+    return profile.profile_summary(db, skill_id)
 
 
 def principles_text(skill: dict) -> str:

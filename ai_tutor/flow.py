@@ -224,17 +224,27 @@ class Decision:
     verdict: str = ""                    # "One change:" | "No change:" | "Keeping the level."
 
 
-def lever_scores(db: sqlite3.Connection) -> dict[str, float]:
-    """What has worked for this learner: a lever is credited when the next rating after it was 'just right', and debited when the
-    same complaint came back (a smaller debit when it swung the other way)."""
-    scores: dict[str, float] = {}
+def lever_outcomes(db: sqlite3.Connection) -> tuple[dict[str, int], dict[str, float]]:
+    """For each lever: how many times the next rating after it was 'just right' (good), and how much the complaint came back (bad: 1 if the
+    same complaint, half if it swung the other way)."""
+    good: dict[str, int] = {}
+    bad: dict[str, float] = {}
     rows = db.execute("SELECT id, skill_id, rating_used, lever_changed FROM flow_rating WHERE skill_id IS NOT NULL ORDER BY skill_id, id").fetchall()
     for a, b in itertools.pairwise(rows):
         if a["skill_id"] != b["skill_id"] or not a["lever_changed"]:
             continue
-        delta = 1.0 if b["rating_used"] == "just_right" else (-1.0 if b["rating_used"] == a["rating_used"] else -0.5)
-        scores[a["lever_changed"]] = scores.get(a["lever_changed"], 0.0) + delta
-    return scores
+        if b["rating_used"] == "just_right":
+            good[a["lever_changed"]] = good.get(a["lever_changed"], 0) + 1
+        else:
+            bad[a["lever_changed"]] = bad.get(a["lever_changed"], 0.0) + (1.0 if b["rating_used"] == a["rating_used"] else 0.5)
+    return good, bad
+
+
+def lever_scores(db: sqlite3.Connection) -> dict[str, float]:
+    """What has worked for this learner: a lever is credited when the next rating after it was 'just right', and debited when the
+    same complaint came back (a smaller debit when it swung the other way)."""
+    good, bad = lever_outcomes(db)
+    return {lid: good.get(lid, 0) - bad.get(lid, 0.0) for lid in set(good) | set(bad)}
 
 
 def decide(rating: str, level: int, state: dict, sig: Signals, scores: dict[str, float], *, attempt_next: int, passed_skills: list[str]) -> Decision:

@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 from . import assets as assetlib
 from . import check as chk
 from . import feedback as fbk
-from . import flow
+from . import flow, hours, profile
 from . import skills as sk
 from .citations import cite
 from .embeddings import Embedder
@@ -88,7 +88,7 @@ class SessionService:
         from . import projects
         skill = sk.skill_detail(self.db, r["skill_id"])
         project = projects.view(self.db, projects.get(self.db, r["project_id"]))
-        return Ctx(self.db, self.llm, self.embedder, skill, project, r["id"], profile=profile_summary(self.db))
+        return Ctx(self.db, self.llm, self.embedder, skill, project, r["id"], profile=profile_summary(self.db, r["skill_id"]))
 
     def timer(self, r: sqlite3.Row) -> dict:
         now, since, seen = self.clock(), parse(r["timer_since"]), parse(r["timer_seen"])
@@ -115,7 +115,7 @@ class SessionService:
             "skill": {"id": skill["id"], "name": skill["name"], "description": skill["description"], "principles": skill["principles"],
                       "concepts": skill["concepts"]},
             "project": {"id": proj["id"], "name": proj["name"], "minutes_per_session": proj["minutes_per_session"]},
-            "difficulty": ls["difficulty_current"] if ls else 3, "hours": round(ls["hours_total"], 2) if ls else 0.0,
+            "difficulty": ls["difficulty_current"] if ls else 3, "hours": round(hours.skill_seconds(self.db, r["skill_id"], self.clock()) / 3600, 2),
             "task": json.loads(r["task_json"]) if r["task_json"] else None, "draft": r["draft_text"], "timer": self.timer(r),
             "diagnosis": json.loads(r["diagnosis_json"]) if r["diagnosis_json"] else None,
             "gate": practice_gate(self.db, r["skill_id"]), "messages": msgs, "assets": assetlib.draft_assets(self.db, session_id), "flow": self._flow_view(r), **self._extras(r, msgs),
@@ -289,6 +289,7 @@ class SessionService:
             raise TransitionError("There is no running timer.")
         self.db.execute("UPDATE session SET timer_elapsed_s = ?, timer_since = NULL WHERE id = ?", (self._elapsed(r), r["id"]))
         self.db.commit()
+        hours.recompute(self.db, r["skill_id"], self.clock())
 
     def _do_resume_timer(self, r, _text):
         if r["phase"] not in TIMED or r["timer_since"]:
@@ -318,8 +319,9 @@ class SessionService:
         self.db.execute(
             "UPDATE session SET attempt = ?, phase = 'feedback', draft_text = '', timer_elapsed_s = 0, timer_since = NULL, "
             "overtime_s = overtime_s + ?, minutes = minutes + ? WHERE id = ?", (attempt, over, elapsed / 60, r["id"]))
-        self.db.execute("UPDATE learner_skill SET hours_total = hours_total + ?, last_session_at = ? WHERE skill_id = ?",
-                        (elapsed / 3600, iso(self.clock()), r["skill_id"]))
+        self.db.execute("UPDATE learner_skill SET last_session_at = ? WHERE skill_id = ?", (iso(self.clock()), r["skill_id"]))
+        self.db.commit()
+        hours.recompute(self.db, r["skill_id"], self.clock())          # worked out from the sessions, never added to: it cannot be counted twice
         self.add_message(r["id"], "user", text, kind="submission", phase=r["phase"],
                          meta={"submission_id": sub, "version": attempt, "minutes": round(elapsed / 60, 1), "overtime_s": int(over), "assets": snapshot})
         self.db.commit()
@@ -466,6 +468,7 @@ class SessionService:
             new_task = adjust_task(self.ctx(r), json.loads(r["task_json"]), dec.lever, dec.state_after)
         flow.record(self.db, session_id=r["id"], skill_id=r["skill_id"], feedback_id=fb["id"], rating=tapped, rating_used=used, inferred=inferred, sig=sig, dec=dec,
                     level_before=level, now=iso(self.clock()))
+        profile.refresh_derived(self.db, self.clock())
         if new_task is not None:
             self.db.execute("UPDATE session SET task_json = ? WHERE id = ?", (json.dumps(new_task), r["id"]))
             self.db.commit()
@@ -579,6 +582,8 @@ class SessionService:
         now = self.clock()
         self.db.execute("UPDATE learner_skill SET status = 'passed', last_session_at = ? WHERE skill_id = ?", (iso(now), r["skill_id"]))
         self.db.execute("UPDATE session SET phase = 'pass', ended_at = ?, timer_since = NULL WHERE id = ?", (iso(now), r["id"]))
+        hours.recompute(self.db, r["skill_id"], now)
+        profile.refresh_derived(self.db, now)
         due = iso(now + REVIEW_FIRST_INTERVAL)
         skill = sk.skill_detail(self.db, r["skill_id"])
         self.db.execute("INSERT INTO review_item(skill_id, level, question, answer, due_at) VALUES (?,?,?,?,?)",

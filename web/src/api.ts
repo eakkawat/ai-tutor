@@ -77,6 +77,16 @@ export type FbMeta = {
 };
 export type Compare = { a: { version: number; text: string }; b: { version: number; text: string }; lines: { op: " " | "+" | "-"; text: string }[] };
 
+export type ProfileNote = { id: number; text: string; section: "understand" | "flow"; topic: string | null; evidence: string | null; source: "auto" | "user"; edited: boolean; updated_at: string };
+export type ProfileSection = { key: "understand" | "flow"; title: string; notes: ProfileNote[] };
+export type ProgressData = {
+  totals: { practice_hours: number; skills_passed: number; just_right: [number, number]; reviews_right: [number, number] };
+  skills: { id: number; name: string; status: string; status_text: string; hours: number; target: number; bar: number; over: number; success_rate: number | null }[];
+  mistakes: { tag: string; kind: string; count: number; last_seen: string; skill: string; fixed: boolean }[];
+  flow_history: { id: number; task: string; skill: string | null; felt: string; inferred: boolean; changed: string; at: string }[];
+  target: number;
+};
+
 export type Triage = { book_type: string; domain?: string; practicable: boolean; likely_skills: string[]; reason: string };
 export type SourceStatus = "processing" | "ready" | "reference_only" | "needs_ocr" | "error" | "cancelled" | "new";
 export type Source = {
@@ -163,6 +173,11 @@ export const api = {
   compare: (id: number, a: number, b: number) => call<Compare>(`/api/sessions/${id}/compare?a=${a}&b=${b}`),
   rate: (id: number, rating: string, cantStart = false) =>
     call<SessionView>(`/api/sessions/${id}/rating`, { method: "POST", body: JSON.stringify({ rating, cant_start: cantStart }) }),
+  profile: () => call<{ sections: ProfileSection[] }>("/api/profile"),
+  addNote: (text: string, section: string) => call<ProfileNote>("/api/profile/notes", { method: "POST", body: JSON.stringify({ text, section }) }),
+  editNote: (id: number, text: string) => call<ProfileNote>(`/api/profile/notes/${id}`, { method: "PATCH", body: JSON.stringify({ text }) }),
+  removeNote: (id: number) => call<{ ok: true }>(`/api/profile/notes/${id}`, { method: "DELETE" }),
+  progress: () => call<ProgressData>("/api/progress"),
   uploadAsset,
   removeAsset: (id: number) => call<{ ok: true }>(`/api/assets/${id}`, { method: "DELETE" }),
   retryAsset: (id: number) => call<{ ok: true }>(`/api/assets/${id}/retry`, { method: "POST" }),

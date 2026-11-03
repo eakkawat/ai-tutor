@@ -1,11 +1,13 @@
 """The teaching session: read it, act on it, save a draft, ask what comes next, and flag a message that felt wrong."""
+import logging
 import sqlite3
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel
 
-from .. import app_settings, picker, setup_check
+from .. import app_settings, picker, profile, setup_check
 from ..session import SessionService, TransitionError
+from ..store.conn import open_db
 from ..teaching import TutorError
 from ..worker import Worker
 
@@ -60,10 +62,26 @@ def get_session(session_id: int, request: Request) -> dict:
     return run(service(request).view, session_id)
 
 
+def _learn_from(db_path, llm, session_id: int, now) -> None:
+    """After a skill is finished: add what the session showed to the learner profile. Runs after the reply is sent; never raises."""
+    db = open_db(db_path)
+    try:
+        profile.update_after_session(db, llm, session_id, now)
+    except Exception:
+        logging.getLogger(__name__).exception("could not update the profile for session %s", session_id)
+    finally:
+        db.close()
+
+
 @router.post("/sessions/{session_id}/act")
-def act(session_id: int, body: ActIn, request: Request) -> dict:
+def act(session_id: int, body: ActIn, request: Request, background: BackgroundTasks) -> dict:
     _exists(request.app.state.db, session_id)
-    return run(service(request).act, session_id, body.action, body.text)
+    before = request.app.state.db.execute("SELECT ended_at FROM session WHERE id = ?", (session_id,)).fetchone()["ended_at"]
+    view = run(service(request).act, session_id, body.action, body.text)
+    if view["ended"] and not before:
+        st = request.app.state
+        background.add_task(_learn_from, st.paths.db, st.llm_factory(0), session_id, st.clock())
+    return view
 
 
 @router.post("/sessions/{session_id}/rating")

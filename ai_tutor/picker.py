@@ -6,11 +6,12 @@ If the model cannot be reached, the list falls back to the similarity order and 
 """
 import logging
 import sqlite3
+from datetime import UTC, datetime
 
 import numpy as np
 from pydantic import BaseModel, Field
 
-from . import projects
+from . import hours, projects
 from . import skills as sk
 from .embeddings import Embedder, EmbeddingUnavailable, chunk_document
 from .llm.client import LLMClient
@@ -170,6 +171,8 @@ def start_skill(db: sqlite3.Connection, project_id: int, skill_id: int, *, pause
         if not pause_current:
             raise ActiveSkillError(current)
         db.execute("UPDATE learner_skill SET status = 'paused' WHERE skill_id = ?", (current["id"],))     # its session, hours and phase stay as they are
+        hours.stop_running_timers(db, current["id"])
+        hours.recompute(db, current["id"], datetime.now(UTC))
     db.execute("INSERT INTO learner_skill(skill_id, status) VALUES (?, 'active') ON CONFLICT(skill_id) DO UPDATE SET status = 'active'", (skill_id,))
     sess = db.execute("SELECT id, phase FROM session WHERE skill_id = ? AND ended_at IS NULL ORDER BY id DESC LIMIT 1", (skill_id,)).fetchone()
     if sess is None:

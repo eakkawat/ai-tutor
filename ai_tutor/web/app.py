@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .. import app_settings, setup_check
+from .. import app_settings, hours, setup_check
 from ..config import Paths
 from ..config import paths as default_paths
 from ..embeddings import get_embedder
@@ -18,6 +18,7 @@ from ..store.conn import open_db
 from ..worker import Worker
 from .library_api import router as library_router
 from .media_api import router as media_router
+from .profile_api import router as profile_router
 from .projects_api import router as projects_router
 from .sessions_api import router as sessions_router
 from .skills_api import router as skills_router
@@ -50,6 +51,7 @@ def create_app(
         app.state.clock = clock
         app.state.check_kwargs = kw
         app.state.db = open_db(p.db)
+        hours.settle_stale_timers(app.state.db, clock())          # a timer the closed app left running stops at its last sign of life
         app.state.embedder = embedder
         app.state.llm_factory = llm_client or (lambda sid: LLMClient.for_job("triage") if app_settings.llm_config() else None)
         app.state.worker = Worker(p.db, embedder_factory=embedder, llm_factory=app.state.llm_factory)
@@ -68,6 +70,7 @@ def create_app(
     app.include_router(projects_router)
     app.include_router(sessions_router)
     app.include_router(media_router)
+    app.include_router(profile_router)
 
     def status(verify: bool) -> dict:
         return setup_check.summarize(setup_check.check_dependencies(verify=verify, verify_llm=verify_llm, **kw))

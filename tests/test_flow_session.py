@@ -22,6 +22,7 @@ def practicing(env, *fbs, hours=0.0):
     s = check_script(feedback=sequence(*fbs) if fbs else (lambda u, c: fb_json()))
     be = SmartBackend(session=s)
     svc = to_practice(env, env.make(be))
+    env.db.execute("UPDATE session SET minutes = ? WHERE id = ?", (hours * 60, env.sid))              # hours are worked out from the sessions
     env.db.execute("UPDATE learner_skill SET hours_total = ? WHERE skill_id = ?", (hours, env.skill))
     env.db.commit()
     return svc, be

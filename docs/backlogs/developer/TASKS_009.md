@@ -8,74 +8,74 @@
 
 ## Prerequisites
 
-- [ ] `prompts/profile_update.md` (session summary in, profile notes JSON out)
-- [ ] `ProfileNote` read/write layer
+- [x] `prompts/profile_update.md` (session summary in, profile notes JSON out)
+- [x] `ProfileNote` read/write layer
 
 ---
 
 ## STEP 1: Hours Tracking (F1)
 
-- [ ] Add session minutes to `LearnerSkill.hours_total` on session end
-- [ ] Count only practice time, per the timer; include logged overtime
-- [ ] Paused time not counted
-- [ ] Handle sessions ended by closing the app
+- [x] Keep `LearnerSkill.hours_total` equal to the minutes of all the skill's sessions (worked out continuously, not only at the end, see D-019)
+- [x] Count only practice time, per the timer; include logged overtime
+- [x] Paused time not counted
+- [x] Handle sessions ended by closing the app
 
 ## STEP 2: Update Profile After Each Session (E4)
 
-- [ ] Update level and hours per skill
-- [ ] Update concept levels and confusions
-- [ ] Update recurring mistakes (tagged, linked to principles)
-- [ ] Update flow history: which levers moved the user to "just right"
-- [ ] Update learned preferences: examples vs rules, session length, bored/overwhelmed task types
-- [ ] Update explanation styles that led to correct recall
+- [x] Update level and hours per skill
+- [x] Update concept levels and confusions
+- [x] Update recurring mistakes (tagged, linked to principles)
+- [x] Update flow history: which levers moved the user to "just right"
+- [x] Update learned preferences: examples vs rules, session length, bored/overwhelmed task types
+- [x] Update explanation styles that led to correct recall (the model is given the recall-check results of the session and may write a note; the app does not yet record which explanation style came before each correct answer)
 
 ## STEP 3: Inject Profile into Prompts
 
-- [ ] Compact profile summary for every teaching prompt, fenced as data
-- [ ] Keep size bounded
+- [x] Compact profile summary for every teaching prompt, fenced as data
+- [x] Keep size bounded
 
 ## STEP 4: Profile Screen (E4)
 
-- [ ] Profile screen (`design/Profile.dc.html`): view all sections
-- [ ] Edit and delete notes
-- [ ] Edits take precedence over automatic updates
+- [x] Profile screen (`design/Profile.dc.html`): view all sections
+- [x] Edit and delete notes
+- [x] Edits take precedence over automatic updates
 
 ## STEP 5: Progress Screen (F1, F4)
 
-- [ ] Progress screen (`design/Progress.dc.html`): hours per skill toward 20
-- [ ] Passed skills list
-- [ ] Recurring mistakes
-- [ ] Flow history
-- [ ] Status shown as text, not color alone
+- [x] Progress screen (`design/Progress.dc.html`): hours per skill toward 20
+- [x] Passed skills list
+- [x] Recurring mistakes
+- [x] Flow history
+- [x] Status shown as text, not color alone
 
 ---
 
 ## Edge Cases
 
-- [ ] Over 20 hours: show the total without breaking the bar
-- [ ] Empty profile on first session
-- [ ] Conflicting notes: newest or edited wins
+- [x] Over 20 hours: show the total without breaking the bar
+- [x] Empty profile on first session
+- [x] Conflicting notes: newest or edited wins
 
 ## Testing
 
-- [ ] Test hours add up across several sessions
-- [ ] Test profile appears in the assembled prompt
-- [ ] Test edits persist after the next automatic update
-- [ ] Acceptance: hours per skill are visible and correct
+- [x] Test hours add up across several sessions
+- [x] Test profile appears in the assembled prompt
+- [x] Test edits persist after the next automatic update
+- [x] Acceptance: hours per skill are visible and correct
 
 ---
 
 ## Task Summary
 
-| Category      | Tasks  | Status          |
-| ------------- | ------ | --------------- |
-| Prerequisites | 2      | Pending         |
-| Step 1-5      | 22     | Pending         |
-| Edge Cases    | 3      | Pending         |
-| Testing       | 4      | Pending         |
-| **Total**     | **31** | **0% Complete** |
+| Category | Tasks | Status |
+| --- | --- | --- |
+| Prerequisites | 2 | Done |
+| Step 1-5 | 20 | Done |
+| Edge Cases | 3 | Done |
+| Testing | 4 | Done |
+| **Total** | **29** | **29/29 done** |
 
 ---
 
-**Task List Version:** 1.0
+**Task List Version:** 1.1
 **Created:** 2026-11-03

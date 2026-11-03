@@ -158,6 +158,9 @@ class SmartBackend:
         elif "## Phase: Adjusting a task" in user:
             job, out = "task_adjust", self._session("task_adjust", user) if "task_adjust" in self.session else {"text": "A made-up piece.", "items": ["First beat", "Second beat", "Third beat"]}
             out = out if isinstance(out, str) else json.dumps(out)
+        elif "## Phase: Learning how this learner learns" in user:
+            job, out = "profile_update", self._session("profile_update", user) if "profile_update" in self.session else {"notes": []}
+            out = out if isinstance(out, str) else json.dumps(out)
         elif "A question from the learner" in user:
             job, out = "qa", self._session("qa", user)
         else:

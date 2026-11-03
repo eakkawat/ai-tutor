@@ -4,6 +4,8 @@ import { api } from "./api";
 import Home from "./pages/Home";
 import Library from "./pages/Library";
 import Picker from "./pages/Picker";
+import Profile from "./pages/Profile";
+import Progress from "./pages/Progress";
 import ProjectForm from "./pages/ProjectForm";
 import Setup from "./pages/Setup";
 import Soon from "./pages/Soon";
@@ -57,8 +59,8 @@ export default function App() {
         <Route path="/skills" element={<SkillMap />} />
         <Route path="/skills/review" element={<SkillReview />} />
         <Route path="/concepts" element={<Soon title="Concepts" />} />
-        <Route path="/progress" element={<Soon title="Progress" />} />
-        <Route path="/profile" element={<Soon title="How I learn" />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
