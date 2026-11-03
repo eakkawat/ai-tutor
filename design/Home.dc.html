@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<span style="font-weight: 600; font-size: 16px">Tutor</span>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+<a href="Home.dc.html" aria-current="page" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; background: #E8EBFA; color: #1F3399; font-weight: 600; text-decoration: none">Home</a>
+<a href="SkillMap.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Skill map</a>
+<a href="Concepts.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Concepts</a>
+<a href="Library.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Library</a>
+<a href="Progress.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Progress</a>
+<a href="Profile.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">How I learn</a>
+</nav>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; padding: 32px; max-width: 1280px; margin: 0 auto; box-sizing: border-box">
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section aria-labelledby="cont" style="background: #FFFFFF; border: 2px solid #2F4BC9; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #2F4BC9">Pick up where you left off</span>
+<span style="font-size: 13px; color: #5B6066">Last session: yesterday</span>
+</div>
+<div>
+<h1 id="cont" style="margin: 0; font-size: 30px; font-weight: 600; line-height: 1.2">Want vs. obstacle in a scene</h1>
+<p style="margin: 6px 0 0; color: #3A3F44">For Grandma's Kitchen (3-min short)</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 16px; border-radius: 10px; background: #F5F6F4">
+<div><div style="font-size: 12px; color: #5B6066">Next</div><div style="font-weight: 600">Revise · attempt 3</div></div>
+<div><div style="font-size: 12px; color: #5B6066">Time</div><div style="font-weight: 600">~20 min, timed</div></div>
+<div><div style="font-size: 12px; color: #5B6066">Principles met</div><div style="font-weight: 600">2 of 4</div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #5B6066">Practice hours</span><span style="font-family: 'IBM Plex Mono', monospace">2.9 / 20</span></div>
+<div style="height: 8px; background: #E3E6E1; border-radius: 4px"><div style="width: 15%; height: 8px; background: #2F4BC9; border-radius: 4px"></div></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<span style="font-size: 14px; color: #3A3F44">Starts with 2 quick review questions.</span>
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; height: 48px; padding: 0 28px; border-radius: 8px; background: #2F4BC9; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none">Continue</a>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px">
+<section aria-labelledby="rev" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px">
+<h2 id="rev" style="margin: 0; font-size: 17px; font-weight: 600">Reviews due</h2>
+<span style="font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: #FBF0D9; color: #7A4E00">3</span>
+</div>
+<p style="margin: 0; font-size: 14px; color: #3A3F44">3 questions from <strong>Write a logline in one sentence</strong> (passed). About 4 minutes.</p>
+<a href="#review" style="align-self: flex-start; display: inline-flex; align-items: center; height: 44px; padding: 0 18px; margin-top: 4px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; text-decoration: none">Review now</a>
+</section>
+
+<section aria-labelledby="new" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="new" style="margin: 0; font-size: 17px; font-weight: 600">New skill</h2>
+<p style="margin: 0; font-size: 14px; color: #3A3F44">See a short list of skills for this project. Starting one pauses your current skill.</p>
+<a href="Picker.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; height: 44px; padding: 0 18px; margin-top: 4px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; text-decoration: none">Choose a skill</a>
+</section>
+</div>
+
+<section aria-labelledby="proj" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<h2 id="proj" style="margin: 0; font-size: 17px; font-weight: 600">Project: Grandma's Kitchen</h2>
+<a href="#projects" style="font-size: 14px">Switch project</a>
+</div>
+<dl style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 24px; margin: 12px 0 0">
+<div><dt style="font-size: 12px; color: #5B6066">Making</dt><dd style="margin: 0; font-size: 14px">A 3-minute short film</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Good enough means</dt><dd style="margin: 0; font-size: 14px">[Your definition of done]</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Session length</dt><dd style="margin: 0; font-size: 14px">45 min</dd></div>
+</dl>
+</section>
+</main>
+
+<aside aria-label="Overview" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<h2 style="margin: 0 0 12px; font-size: 15px; font-weight: 600">Skills</h2>
+<dl style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0">
+<div><dt style="font-size: 12px; color: #5B6066">Passed</dt><dd style="margin: 0; font-size: 22px; font-weight: 600">1</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Active</dt><dd style="margin: 0; font-size: 22px; font-weight: 600">1</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Paused</dt><dd style="margin: 0; font-size: 22px; font-weight: 600">0</dd></div>
+</dl>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 600">Recurring mistakes</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+<li style="display: flex; justify-content: space-between; gap: 12px"><span>Endings don't change the want</span><span style="font-family: 'IBM Plex Mono', monospace; color: #5B6066">3×</span></li>
+<li style="display: flex; justify-content: space-between; gap: 12px"><span>Same tactic used twice</span><span style="font-family: 'IBM Plex Mono', monospace; color: #5B6066">2×</span></li>
+</ul>
+<a href="#profile" style="display: inline-block; margin-top: 12px; font-size: 14px">See how you learn</a>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 600">Library</h2>
+<p style="margin: 0 0 10px; font-size: 14px; color: #3A3F44">3 books · 41 skills</p>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 8px; background: #F5F6F4">
+<div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px"><span>[Book C] · finding skills</span><span style="font-family: 'IBM Plex Mono', monospace; color: #5B6066">3 of 4</span></div>
+<div style="height: 4px; background: #E3E6E1; border-radius: 2px"><div style="width: 75%; height: 4px; background: #2F4BC9; border-radius: 2px"></div></div>
+</div>
+<a href="#library" style="display: inline-block; margin-top: 12px; font-size: 14px">Add a book</a>
+</section>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

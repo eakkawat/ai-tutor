@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session — Feedback and Flow Rating</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 1180px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px">
+<a href="#home" style="font-weight: 600; text-decoration: none; color: #16181A">Tutor</a>
+<span aria-hidden="true" style="color: #8A9096">/</span>
+<a href="#project" style="color: #5B6066; text-decoration: none">Grandma's Kitchen (3-min short)</a>
+<span aria-hidden="true" style="color: #8A9096">/</span>
+<span style="font-weight: 600">Want vs. obstacle in a scene</span>
+<span style="font-size: 12px; padding: 2px 10px; border-radius: 999px; background: #E8EBFA; color: #2F4BC9; font-weight: 500">Difficulty 3 / 5</span>
+</nav>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px">
+<span style="font-size: 12px; color: #5B6066">Practice hours on this skill</span>
+<div style="display: flex; align-items: center; gap: 8px">
+<div style="flex: 1; height: 6px; background: #E3E6E1; border-radius: 3px"><div style="width: 15%; height: 6px; background: #2F4BC9; border-radius: 3px"></div></div>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">2.9 / 20</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 12px; color: #5B6066">Session</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500">41:05</span>
+</div>
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Pause</button>
+</div>
+</header>
+
+<ol aria-label="Session phases" style="list-style: none; display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; padding: 12px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8; font-size: 14px">
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Diagnose</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Learn</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Check</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Practice</li>
+<li aria-current="step" style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #16181A"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #2F4BC9; color: #FFFFFF; font-size: 12px">5</span>Feedback</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px">6</span>Revise</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px">7</span>Pass</li>
+</ol>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; padding: 24px 32px; max-width: 1440px; margin: 0 auto; box-sizing: border-box">
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section aria-label="Feedback summary" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Feedback · Attempt 2</span>
+<button type="button" style="min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: #5B6066; font-size: 13px; cursor: pointer">This felt wrong</button>
+</div>
+<h2 style="margin: 4px 0 8px; font-size: 22px; font-weight: 600">Not passed yet: 2 of 4 principles followed</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 14px; border-radius: 8px; background: #EEF6F1">
+<span style="font-size: 13px; font-weight: 600; color: #1E6B45">Since attempt 1</span>
+<span style="font-size: 14px">Mai's want now shows on line 2 (was line 9). Grandma blocks her twice (was once).</span>
+</div>
+</section>
+
+<section aria-label="Principle checklist" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 8px 24px">
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px 16px; padding: 16px 0; border-bottom: 1px solid #E3E6E1">
+<span style="flex: 0 0 auto; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #E3F1E8; color: #1E6B45; min-width: 92px; text-align: center">Followed</span>
+<div style="flex: 1; min-width: 260px">
+<div style="font-weight: 600">The want is clear by the end of the first beat. <a href="#s1" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; text-decoration: none">[A · p. 41]</a></div>
+<div style="font-size: 14px; color: #3A3F44; margin-top: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #16181A">Line 2</span> · Mai reaching for the tin tells us what she wants before anyone speaks.</div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px 16px; padding: 16px 0; border-bottom: 1px solid #E3E6E1">
+<span style="flex: 0 0 auto; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #E3F1E8; color: #1E6B45; min-width: 92px; text-align: center">Followed</span>
+<div style="flex: 1; min-width: 260px">
+<div style="font-weight: 600">The obstacle actively opposes the want. <a href="#s2" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; text-decoration: none">[B · p. 112]</a></div>
+<div style="font-size: 14px; color: #3A3F44; margin-top: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #16181A">0:21</span> · Grandma physically hides the tin. That's an active block, not bad luck.</div>
+<div style="display: flex; gap: 8px; margin-top: 8px">
+<figure style="margin: 0"><div role="img" aria-label="Frame at 0:21" style="width: 112px; height: 63px; border-radius: 4px; background: #2A2D30"></div><figcaption style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B6066; margin-top: 2px">0:21</figcaption></figure>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px 16px; padding: 16px 0; border-bottom: 1px solid #E3E6E1">
+<span style="flex: 0 0 auto; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #FBF0D9; color: #7A4E00; min-width: 92px; text-align: center">Partly</span>
+<div style="flex: 1; min-width: 260px">
+<div style="font-weight: 600">Each exchange shifts who has the upper hand. <a href="#s3" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; text-decoration: none">[B · p. 114]</a></div>
+<div style="font-size: 14px; color: #3A3F44; margin-top: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #16181A">0:48–1:10</span> · Mai asks the same way twice. Grandma stays in control both times, so the second push adds nothing.</div>
+<div style="display: flex; gap: 8px; margin-top: 8px">
+<figure style="margin: 0"><div role="img" aria-label="Frame at 0:48" style="width: 112px; height: 63px; border-radius: 4px; background: #2A2D30"></div><figcaption style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B6066; margin-top: 2px">0:48</figcaption></figure>
+<figure style="margin: 0"><div role="img" aria-label="Frame at 1:10" style="width: 112px; height: 63px; border-radius: 4px; background: #2A2D30"></div><figcaption style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B6066; margin-top: 2px">1:10</figcaption></figure>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px 16px; padding: 16px 0">
+<span style="flex: 0 0 auto; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #FBE4E1; color: #A3261A; min-width: 92px; text-align: center">Not followed</span>
+<div style="flex: 1; min-width: 260px">
+<div style="font-weight: 600">The scene ends with the want won, lost, or changed. <a href="#s4" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; text-decoration: none">[A · p. 58]</a></div>
+<div style="font-size: 14px; color: #3A3F44; margin-top: 2px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #16181A">1:42</span> · Grandma turns off the light, but we don't know where that leaves Mai's want.</div>
+<div style="display: flex; gap: 8px; margin-top: 8px">
+<figure style="margin: 0"><div role="img" aria-label="Frame at 1:42" style="width: 112px; height: 63px; border-radius: 4px; background: #2A2D30"></div><figcaption style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B6066; margin-top: 2px">1:42</figcaption></figure>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-label="Top fixes" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Fix these two</span>
+<ol style="margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px">
+<li>Give Mai a <strong>new tactic</strong> on her second push, so the balance of power moves. <a href="#s3" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">[B · p. 114]</a></li>
+<li>End on a beat where her want visibly <strong>changes</strong>. For example, she stops asking and starts writing the recipe down from memory. <a href="#s4" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">[A · p. 58]</a></li>
+</ol>
+</section>
+
+<section aria-label="Flow rating" style="background: #FFFFFF; border: 2px solid #2F4BC9; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px">
+<h3 id="rate" style="margin: 0; font-size: 18px; font-weight: 600">How did that task feel?</h3>
+<div role="group" aria-labelledby="rate" style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{ ratings }}" as="r" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{ r.pressed }}" onClick="{{ r.pick }}" style="{{ r.style }}">{{ r.label }}</button>
+</sc-for>
+</div>
+<sc-if value="{{ isEasy }}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; padding: 12px 14px; border-radius: 8px; background: #F5F6F4; font-size: 14px"><strong>One change:</strong> the beat template is removed for attempt 3. Everything else stays the same.</p>
+</sc-if>
+<sc-if value="{{ isRight }}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; padding: 12px 14px; border-radius: 8px; background: #F5F6F4; font-size: 14px"><strong>No change:</strong> difficulty stays at 3. Revise using the two fixes above.</p>
+</sc-if>
+<sc-if value="{{ isHard }}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; padding: 12px 14px; border-radius: 8px; background: #F5F6F4; font-size: 14px"><strong>Keeping the level.</strong> You're under 3 hours on this skill and your work improved between attempts, so this is productive struggle, not overwhelm. If attempt 3 repeats the same mistake, I'll add a worked example.</p>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding-top: 4px; border-top: 1px solid #E3E6E1">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Compare attempts</button>
+<button type="button" style="height: 44px; padding: 0 22px; border-radius: 8px; border: 0; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">Start attempt 3</button>
+</div>
+</section>
+</main>
+
+<aside aria-label="Source and session" style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section id="s3" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Source</span>
+<h3 style="margin: 4px 0 2px; font-size: 16px; font-weight: 600">[Book B]</h3>
+<p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B6066">Chapter 7 · page 114</p>
+<div style="border-radius: 8px; background: #F5F6F4; padding: 12px 14px; font-size: 14px; color: #3A3F44">
+<p style="margin: 0 0 8px">[Surrounding text from the page]</p>
+<p style="margin: 0 0 8px; background: #FFF3C4; padding: 4px 6px; border-radius: 4px; color: #16181A">[The cited passage, highlighted]</p>
+<p style="margin: 0">[Surrounding text from the page]</p>
+</div>
+<a href="#open" style="display: inline-block; margin-top: 12px; font-size: 14px">Open full page</a>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">This session</span>
+<dl style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 8px 0 0">
+<div><dt style="font-size: 12px; color: #5B6066">Attempts</dt><dd style="margin: 0; font-size: 20px; font-weight: 600">2</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Practice time</dt><dd style="margin: 0; font-size: 20px; font-weight: 600">31 min</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Principles met</dt><dd style="margin: 0; font-size: 20px; font-weight: 600">2 / 4</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Recurring mistake</dt><dd style="margin: 0; font-size: 14px; font-weight: 500">Weak endings</dd></div>
+</dl>
+</section>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { rating: null };
+}
+renderVals() {
+const base = 'height: 44px; padding: 0 20px; border-radius: 8px; font-size: 14px; cursor: pointer; ';
+const on = 'border: 2px solid #2F4BC9; background: #E8EBFA; color: #1F3399; font-weight: 600';
+const off = 'border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-weight: 400';
+const options = [
+{ id: 'easy', label: 'Too easy' },
+{ id: 'right', label: 'Just right' },
+{ id: 'hard', label: 'Too hard' }
+];
+const current = this.state.rating;
+return {
+ratings: options.map((o) => ({
+label: o.label,
+pressed: current === o.id ? 'true' : 'false',
+style: base + (current === o.id ? on : off),
+pick: () => this.setState({ rating: o.id })
+})),
+isEasy: current === 'easy',
+isRight: current === 'right',
+isHard: current === 'hard'
+};
+}
+}
+</script>
+</body>
+</html>

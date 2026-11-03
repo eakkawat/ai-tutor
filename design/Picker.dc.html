@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose a skill</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1060px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; min-height: 44px">
+<a href="#home" style="font-weight: 600; text-decoration: none; color: #16181A">Tutor</a>
+<span aria-hidden="true" style="color: #8A9096">/</span>
+<a href="#project" style="color: #5B6066; text-decoration: none">Grandma's Kitchen (3-min short)</a>
+<span aria-hidden="true" style="color: #8A9096">/</span>
+<span style="font-weight: 600">Choose a skill</span>
+</nav>
+<a href="#map" style="font-size: 14px">Open full skill map</a>
+</header>
+
+<div style="max-width: 1440px; margin: 0 auto; padding: 24px 32px 0; box-sizing: border-box">
+<section aria-label="Active skill" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 14px 20px; background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Active skill</span>
+<span style="font-weight: 600">Want vs. obstacle in a scene</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B6066">2.9 / 20 h · attempt 3 next</span>
+</div>
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; text-decoration: none">Continue it</a>
+</section>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; padding: 24px 32px; max-width: 1440px; margin: 0 auto; box-sizing: border-box">
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 600">What to practice next</h1>
+<p style="margin: 0 0 8px; color: #3A3F44">7 skills from your books fit Grandma's Kitchen. Pick one. The rest stay on your skill map.</p>
+
+<sc-for list="{{ skills }}" as="s" hint-placeholder-count="7">
+<button type="button" aria-pressed="{{ s.pressed }}" onClick="{{ s.pick }}" style="{{ s.rowStyle }}">
+<span style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+<span style="font-size: 16px; font-weight: 600">{{ s.name }}</span>
+<sc-if value="{{ s.recommended }}" hint-placeholder-val="{{ false }}">
+<span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #2F4BC9; color: #FFFFFF">Recommended</span>
+</sc-if>
+<sc-if value="{{ s.hasPrereq }}" hint-placeholder-val="{{ false }}">
+<span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #FBF0D9; color: #7A4E00">Needs: {{ s.prereqName }}</span>
+</sc-if>
+</span>
+<span style="display: block; margin-top: 4px; font-size: 14px; color: #3A3F44">{{ s.desc }}</span>
+<span style="display: block; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B6066">{{ s.meta }}</span>
+</button>
+</sc-for>
+</main>
+
+<aside aria-label="Selected skill" style="flex: 1 1 380px; min-width: 0">
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div>
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Selected</span>
+<h2 style="margin: 4px 0 0; font-size: 20px; font-weight: 600">{{ sel.name }}</h2>
+</div>
+
+<sc-if value="{{ sel.recommended }}" hint-placeholder-val="{{ true }}">
+<div style="padding: 12px 14px; border-radius: 8px; background: #E8EBFA; font-size: 14px">
+<strong style="color: #1F3399">Why first:</strong> {{ sel.why }}
+</div>
+</sc-if>
+
+<div>
+<span style="font-size: 14px; font-weight: 600">You'll be judged on</span>
+<ol style="margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+<sc-for list="{{ sel.principles }}" as="p" hint-placeholder-count="3">
+<li>{{ p.text }} <a href="#src" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">{{ p.cite }}</a></li>
+</sc-for>
+</ol>
+</div>
+
+<dl style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0">
+<div><dt style="font-size: 12px; color: #5B6066">You'll practice with</dt><dd style="margin: 0; font-size: 14px; font-weight: 500">{{ sel.practice }}</dd></div>
+<div><dt style="font-size: 12px; color: #5B6066">Typical task</dt><dd style="margin: 0; font-size: 14px; font-weight: 500">{{ sel.minutesLabel }}</dd></div>
+</dl>
+
+<sc-if value="{{ sel.hasPrereq }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="padding: 12px 14px; border-radius: 8px; background: #FBF0D9; border: 1px solid #E9CF95; font-size: 14px; color: #3A2A00">
+<strong>Needs {{ sel.prereqName }} first.</strong> {{ sel.prereqNote }}
+</div>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; border-top: 1px solid #E3E6E1">
+<sc-if value="{{ sel.prereqInList }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ pickPrereq }}" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Pick {{ sel.prereqName }}</button>
+</sc-if>
+<sc-if value="{{ sel.prereqActive }}" hint-placeholder-val="{{ false }}">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; text-decoration: none">Continue that skill</a>
+</sc-if>
+<button type="button" onClick="{{ openDialog }}" style="height: 44px; padding: 0 22px; border-radius: 8px; border: 0; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">{{ sel.startLabel }}</button>
+</div>
+</section>
+</aside>
+</div>
+
+<sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(22, 24, 26, 0.45); display: flex; align-items: flex-start; justify-content: center; padding: 160px 16px 0">
+<div role="dialog" aria-modal="true" aria-labelledby="pause-title" style="width: 100%; max-width: 480px; background: #FFFFFF; border-radius: 12px; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+<h2 id="pause-title" style="margin: 0; font-size: 20px; font-weight: 600">Pause your current skill?</h2>
+<p style="margin: 0; color: #3A3F44">You work on one skill at a time. <strong>Want vs. obstacle in a scene</strong> will be paused with its 2.9 hours, attempts and next task saved.</p>
+<p style="margin: 0; color: #3A3F44">Next: <strong>{{ sel.name }}</strong>, starting with a short diagnosis.</p>
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 8px">
+<button type="button" onClick="{{ closeDialog }}" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Keep current skill</button>
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 8px; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none">Pause and start</a>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { selected: 'emotion', dialogOpen: false };
+}
+renderVals() {
+const skills = [
+{ id: 'emotion', name: 'Show emotion through action, not dialogue', desc: 'Reveal what a character feels through what they do on screen.', practice: 'Scene + storyboard', minutes: 25, sources: 2, recommended: true, why: 'Grandma’s Kitchen has very little dialogue, so most of its screen time depends on this. It needs nothing you haven’t started.', principles: [
+{ text: 'One visible action carries each emotional shift.', cite: '[A · p. 77]' },
+{ text: 'No line of dialogue states the feeling.', cite: '[C · p. 23]' },
+{ text: 'The emotion reads with the sound off.', cite: '[C · p. 25]' }
+] },
+{ id: 'ending', name: 'End a scene on a changed want', desc: 'Close each scene with the want won, lost, or turned into something new.', practice: 'Scene text', minutes: 20, sources: 1, prereq: 'active', principles: [
+{ text: 'The final beat answers the scene’s want.', cite: '[A · p. 58]' },
+{ text: 'The change is shown, not explained.', cite: '[A · p. 60]' }
+] },
+{ id: 'tin', name: 'Plant and pay off an object', desc: 'Introduce an object early so it lands with meaning at the end.', practice: 'Scene text', minutes: 20, sources: 2, principles: [
+{ text: 'The object is seen before it matters.', cite: '[B · p. 140]' },
+{ text: 'Its payoff changes how we read the first sighting.', cite: '[B · p. 142]' }
+] },
+{ id: 'subtext', name: 'Write subtext into a two-person exchange', desc: 'Characters talk about one thing while meaning another.', practice: 'Scene text', minutes: 25, sources: 2, prereq: 'active', principles: [
+{ text: 'The spoken topic differs from the real conflict.', cite: '[B · p. 151]' },
+{ text: 'The audience can name the real conflict.', cite: '[B · p. 153]' }
+] },
+{ id: 'shots', name: 'Shot sizes for emotional distance', desc: 'Choose wide, medium or close to control how close the audience feels.', practice: 'Storyboard', minutes: 20, sources: 1, principles: [
+{ text: 'Each size change matches a change in feeling.', cite: '[C · p. 88]' },
+{ text: 'The closest shot is saved for the key moment.', cite: '[C · p. 90]' }
+] },
+{ id: 'coverage', name: 'Cover a dialogue scene in 5 shots', desc: 'Plan a shot list that cuts together cleanly.', practice: 'Storyboard', minutes: 30, sources: 1, prereq: 'shots', principles: [
+{ text: 'Every line has a usable angle.', cite: '[C · p. 102]' },
+{ text: 'Screen direction stays consistent.', cite: '[C · p. 104]' }
+] },
+{ id: 'cut', name: 'Cut on action between two shots', desc: 'Hide the edit inside a movement.', practice: 'Video clip', minutes: 20, sources: 1, principles: [
+{ text: 'The cut lands mid-movement.', cite: '[C · p. 131]' },
+{ text: 'The action continues without a jump.', cite: '[C · p. 132]' }
+] }
+];
+const nameOf = (id) => id === 'active' ? 'Want vs. obstacle' : (skills.find((k) => k.id === id) || {}).name;
+const base = 'display: block; width: 100%; text-align: left; border-radius: 12px; cursor: pointer; color: #16181A; font-size: 15px; ';
+const on = 'padding: 15px 19px; border: 2px solid #2F4BC9; background: #F7F8FE';
+const off = 'padding: 16px 20px; border: 1px solid #DADDD8; background: #FFFFFF';
+const cur = this.state.selected;
+const list = skills.map((k) => ({
+name: k.name,
+desc: k.desc,
+recommended: !!k.recommended,
+hasPrereq: !!k.prereq,
+prereqName: k.prereq ? nameOf(k.prereq) : '',
+meta: k.practice + ' · ~' + k.minutes + ' min tasks · ' + k.sources + (k.sources === 1 ? ' source' : ' sources'),
+pressed: cur === k.id ? 'true' : 'false',
+rowStyle: base + (cur === k.id ? on : off),
+pick: () => this.setState({ selected: k.id, dialogOpen: false })
+}));
+const s = skills.find((k) => k.id === cur) || skills[0];
+const prereqActive = s.prereq === 'active';
+const prereqInList = !!s.prereq && !prereqActive;
+const sel = {
+name: s.name,
+recommended: !!s.recommended,
+why: s.why || '',
+principles: s.principles,
+practice: s.practice,
+minutesLabel: '~' + s.minutes + ' min, timed',
+hasPrereq: !!s.prereq,
+prereqName: s.prereq ? nameOf(s.prereq) : '',
+prereqNote: prereqActive ? 'It’s your active skill (2.9 h, not passed yet). Starting this now may feel harder than it should.' : 'You haven’t started it yet. Starting this now may feel harder than it should.',
+prereqActive: prereqActive,
+prereqInList: prereqInList,
+startLabel: s.prereq ? 'Start anyway' : 'Start this skill'
+};
+return {
+skills: list,
+sel: sel,
+dialogOpen: this.state.dialogOpen,
+openDialog: () => this.setState({ dialogOpen: true }),
+closeDialog: () => this.setState({ dialogOpen: false }),
+pickPrereq: () => { if (prereqInList) this.setState({ selected: s.prereq }); }
+};
+}
+}
+</script>
+</body>
+</html>

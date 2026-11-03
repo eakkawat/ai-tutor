@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Progress</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<span style="font-weight: 600; font-size: 16px">Tutor</span>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+<a href="Home.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Home</a>
+<a href="SkillMap.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Skill map</a>
+<a href="Concepts.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Concepts</a>
+<a href="Library.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Library</a>
+<a href="Progress.dc.html" aria-current="page" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; background: #E8EBFA; color: #1F3399; font-weight: 600; text-decoration: none">Progress</a>
+<a href="Profile.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">How I learn</a>
+</nav>
+</header>
+
+<main style="max-width: 1120px; margin: 0 auto; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 600">Progress</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 16px 20px"><div style="font-size: 13px; color: #5B6066">Total practice</div><div style="font-size: 28px; font-weight: 600">6.3 h</div></div>
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 16px 20px"><div style="font-size: 13px; color: #5B6066">Skills passed</div><div style="font-size: 28px; font-weight: 600">1</div></div>
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 16px 20px"><div style="font-size: 13px; color: #5B6066">Tasks "just right"</div><div style="font-size: 28px; font-weight: 600">7 of 11</div></div>
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 16px 20px"><div style="font-size: 13px; color: #5B6066">Reviews answered right</div><div style="font-size: 28px; font-weight: 600">8 of 10</div></div>
+</div>
+
+<section aria-labelledby="h" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<h2 id="h" style="margin: 0 0 4px; font-size: 17px; font-weight: 600">Hours toward 20, per skill</h2>
+<p style="margin: 0 0 16px; font-size: 14px; color: #5B6066">20 hours is the target, not a requirement. You pass when your work follows the principles.</p>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: grid; grid-template-columns: minmax(180px, 280px) 1fr 64px; align-items: center; gap: 12px">
+<span style="font-size: 14px">Write a logline in one sentence <span style="font-size: 12px; font-weight: 600; color: #1E6B45">· passed</span></span>
+<div role="img" aria-label="3.4 of 20 hours" style="height: 12px; background: #E3E6E1; border-radius: 6px"><div style="width: 17%; height: 12px; background: #1E6B45; border-radius: 6px"></div></div>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; text-align: right">3.4 h</span>
+</div>
+<div style="display: grid; grid-template-columns: minmax(180px, 280px) 1fr 64px; align-items: center; gap: 12px">
+<span style="font-size: 14px; font-weight: 600">Want vs. obstacle in a scene <span style="font-size: 12px; font-weight: 600; color: #2F4BC9">· active</span></span>
+<div role="img" aria-label="2.9 of 20 hours" style="height: 12px; background: #E3E6E1; border-radius: 6px"><div style="width: 15%; height: 12px; background: #2F4BC9; border-radius: 6px"></div></div>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; text-align: right">2.9 h</span>
+</div>
+<div style="display: grid; grid-template-columns: minmax(180px, 280px) 1fr 64px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B6066; gap: 12px">
+<span></span>
+<div style="display: flex; justify-content: space-between"><span>0</span><span>5</span><span>10</span><span>15</span><span>20 h</span></div>
+<span></span>
+</div>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px">
+<section aria-labelledby="mis" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<h2 id="mis" style="margin: 0 0 12px; font-size: 17px; font-weight: 600">Recurring mistakes</h2>
+<table style="width: 100%; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; font-size: 12px; color: #5B6066"><th scope="col" style="font-weight: 500; padding: 6px 0; border-bottom: 1px solid #E3E6E1">Mistake</th><th scope="col" style="font-weight: 500; padding: 6px 0; border-bottom: 1px solid #E3E6E1; text-align: right">Times</th><th scope="col" style="font-weight: 500; padding: 6px 0 6px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Last seen</th></tr></thead>
+<tbody>
+<tr><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1">Endings don't change the want</td><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">3</td><td style="padding: 10px 0 10px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; color: #5B6066">Today</td></tr>
+<tr><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1">Same tactic used twice</td><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">2</td><td style="padding: 10px 0 10px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; color: #5B6066">Today</td></tr>
+<tr><td style="padding: 10px 0">Want stated too late</td><td style="padding: 10px 0; text-align: right; font-family: 'IBM Plex Mono', monospace">2</td><td style="padding: 10px 0 10px 12px; text-align: right; color: #1E6B45">Fixed</td></tr>
+</tbody>
+</table>
+</section>
+
+<section aria-labelledby="flow" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<h2 id="flow" style="margin: 0 0 12px; font-size: 17px; font-weight: 600">Flow history</h2>
+<table style="width: 100%; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; font-size: 12px; color: #5B6066"><th scope="col" style="font-weight: 500; padding: 6px 0; border-bottom: 1px solid #E3E6E1">Task</th><th scope="col" style="font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #E3E6E1">Felt</th><th scope="col" style="font-weight: 500; padding: 6px 0; border-bottom: 1px solid #E3E6E1">What changed</th></tr></thead>
+<tbody>
+<tr><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1">Attempt 2</td><td style="padding: 10px 8px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #FBF0D9; color: #7A4E00">Too hard</span></td><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1; color: #3A3F44">Kept level (productive struggle)</td></tr>
+<tr><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1">Attempt 1</td><td style="padding: 10px 8px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #E3F1E8; color: #1E6B45">Just right</span></td><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1; color: #3A3F44">No change</td></tr>
+<tr><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1">Recall check</td><td style="padding: 10px 8px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #E8EBFA; color: #1F3399">Too easy</span></td><td style="padding: 10px 0; border-bottom: 1px solid #E3E6E1; color: #3A3F44">Added a time limit</td></tr>
+<tr><td style="padding: 10px 0">Diagnose</td><td style="padding: 10px 8px"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #E3F1E8; color: #1E6B45">Just right</span></td><td style="padding: 10px 0; color: #3A3F44">No change</td></tr>
+</tbody>
+</table>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

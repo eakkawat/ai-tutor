@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session — Learn and Check</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<nav aria-label="Breadcrumb" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px">
+<a href="#home" style="font-weight: 600; text-decoration: none; color: #16181A">Tutor</a>
+<span aria-hidden="true" style="color: #8A9096">/</span>
+<a href="#project" style="color: #5B6066; text-decoration: none">Grandma's Kitchen (3-min short)</a>
+<span aria-hidden="true" style="color: #8A9096">/</span>
+<span style="font-weight: 600">Want vs. obstacle in a scene</span>
+<span style="font-size: 12px; padding: 2px 10px; border-radius: 999px; background: #E8EBFA; color: #2F4BC9; font-weight: 500">Difficulty 3 / 5</span>
+</nav>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px">
+<span style="font-size: 12px; color: #5B6066">Practice hours on this skill</span>
+<div style="display: flex; align-items: center; gap: 8px">
+<div style="flex: 1; height: 6px; background: #E3E6E1; border-radius: 3px"><div style="width: 13%; height: 6px; background: #2F4BC9; border-radius: 3px"></div></div>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">2.6 / 20</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 12px; color: #5B6066">Session</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500">06:12</span>
+</div>
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Pause</button>
+</div>
+</header>
+
+<ol aria-label="Session phases" style="list-style: none; display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; padding: 12px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8; font-size: 14px">
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Diagnose</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Learn</li>
+<li aria-current="step" style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #16181A"><span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #2F4BC9; color: #FFFFFF; font-size: 12px">3</span>Check</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px">4</span>Practice</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px">5</span>Feedback</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px">6</span>Revise</li>
+<li style="display: flex; align-items: center; gap: 8px; color: #5B6066"><span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px">7</span>Pass</li>
+</ol>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; padding: 24px 32px; max-width: 1440px; margin: 0 auto; box-sizing: border-box">
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section aria-label="Diagnosis" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 16px 24px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Diagnosis</span>
+<button type="button" style="min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: #5B6066; font-size: 13px; cursor: pointer">This felt wrong</button>
+</div>
+<p style="margin: 4px 0 0">You can set up a location and a character clearly. <strong>Gap:</strong> Mai's want only shows up in the last line, so Grandma's resistance has nothing to push against.</p>
+</section>
+
+<section aria-label="Lesson" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Learn · 1 min read</span>
+<button type="button" style="min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: #5B6066; font-size: 13px; cursor: pointer">This felt wrong</button>
+</div>
+<h2 style="margin: 4px 0 12px; font-size: 22px; font-weight: 600">State the want early, then block it</h2>
+<p style="margin: 0 0 12px">A scene works when the audience knows what the character wants before the trouble starts. Once the want is clear, every refusal, delay or trick from the other side reads as tension. <a href="#src" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; text-decoration: none; padding: 1px 6px; border-radius: 4px; background: #E8EBFA">[Book A · ch. 3 · p. 41]</a></p>
+<p style="margin: 0 0 12px">The obstacle should be active: a person or force pushing back, not bad luck. Each exchange should shift who has the upper hand. <a href="#src2" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; text-decoration: none; padding: 1px 6px; border-radius: 4px; background: #E8EBFA">[Book B · ch. 7 · p. 112]</a></p>
+<div style="border-radius: 8px; background: #F5F6F4; padding: 12px 16px">
+<span style="font-size: 12px; font-weight: 600; color: #5B6066">Example</span>
+<p style="margin: 4px 0 0">In a heist film, we learn what the crew wants in the first minute, so every locked door and every guard matters.</p>
+</div>
+</section>
+
+<section aria-label="Recall check" style="background: #FFFFFF; border: 2px solid #2F4BC9; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #2F4BC9">Check · Question 2 of 3</span>
+<span style="font-size: 13px; color: #1E6B45; font-weight: 500">Question 1 correct</span>
+</div>
+<label for="answer" style="display: block; margin: 8px 0 12px; font-size: 18px; font-weight: 500">In your kitchen scene, what does Mai want? One sentence.</label>
+<textarea id="answer" rows="3" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid #A9AFA8; border-radius: 8px; font-size: 15px; resize: vertical; background: #FFFFFF; color: #16181A">She wants Grandma's handwritten recipe book before</textarea>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px">
+<span style="font-size: 13px; color: #5B6066">Try first. A hint comes before the answer.</span>
+<div style="display: flex; gap: 8px">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Hint</button>
+<button type="button" style="height: 44px; padding: 0 20px; border-radius: 8px; border: 0; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">Check answer</button>
+</div>
+</div>
+</section>
+
+<form aria-label="Ask the tutor" style="display: flex; gap: 8px; align-items: center">
+<label for="ask" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ask a question about this skill</label>
+<input id="ask" type="text" placeholder="Ask about this skill (answered from your books)" style="flex: 1; min-width: 0; height: 44px; padding: 0 14px; border: 1px solid #C4C8C2; border-radius: 8px; font-size: 14px; background: #FFFFFF; color: #16181A">
+<button type="submit" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Ask</button>
+</form>
+</main>
+
+<aside aria-label="Sources and principles" style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section id="src" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Source</span>
+<h3 style="margin: 4px 0 2px; font-size: 16px; font-weight: 600">[Book A]</h3>
+<p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5B6066">Chapter 3 · page 41</p>
+<div style="border-radius: 8px; background: #F5F6F4; padding: 12px 14px; font-size: 14px; color: #3A3F44">
+<p style="margin: 0 0 8px">[Surrounding text from the page]</p>
+<p style="margin: 0 0 8px; background: #FFF3C4; padding: 4px 6px; border-radius: 4px; color: #16181A">[The cited passage, highlighted]</p>
+<p style="margin: 0">[Surrounding text from the page]</p>
+</div>
+<a href="#open" style="display: inline-block; margin-top: 12px; font-size: 14px">Open full page</a>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Your work will be judged on</span>
+<ol style="margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+<li>The want is clear by the end of the first beat.</li>
+<li>The obstacle actively opposes the want.</li>
+<li>Each exchange shifts who has the upper hand.</li>
+<li>The scene ends with the want won, lost, or changed.</li>
+</ol>
+</section>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

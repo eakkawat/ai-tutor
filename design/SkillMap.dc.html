@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Skill map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 1240px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<span style="font-weight: 600; font-size: 16px">Tutor</span>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+<a href="Home.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Home</a>
+<a href="SkillMap.dc.html" aria-current="page" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; background: #E8EBFA; color: #1F3399; font-weight: 600; text-decoration: none">Skill map</a>
+<a href="Concepts.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Concepts</a>
+<a href="Library.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Library</a>
+<a href="Progress.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Progress</a>
+<a href="Profile.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">How I learn</a>
+</nav>
+</header>
+
+<main style="max-width: 1120px; margin: 0 auto; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+<div>
+<h1 style="margin: 0; font-size: 28px; font-weight: 600">Skill map</h1>
+<p style="margin: 4px 0 0; color: #3A3F44">41 skills from 3 books. This is a reference, not a plan: you only ever work on one.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<div role="group" aria-label="Filter by status" style="display: flex; flex-wrap: wrap; gap: 6px">
+<button type="button" aria-pressed="true" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid #2F4BC9; background: #E8EBFA; color: #1F3399; font-size: 14px; font-weight: 600; cursor: pointer">All · 41</button>
+<button type="button" aria-pressed="false" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">In progress · 1</button>
+<button type="button" aria-pressed="false" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Passed · 1</button>
+<button type="button" aria-pressed="false" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Not started · 39</button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search skills</label>
+<input id="q" type="search" placeholder="Search skills" style="width: 240px; height: 44px; padding: 0 14px; border: 1px solid #C4C8C2; border-radius: 8px; font-size: 14px; background: #FFFFFF; color: #16181A">
+</div>
+</div>
+
+<section aria-labelledby="d1" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 8px 0 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 24px 8px">
+<h2 id="d1" style="margin: 0; font-size: 18px; font-weight: 600">Storytelling <span style="font-weight: 400; color: #5B6066; font-size: 14px">· 18 skills</span></h2>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px">
+<thead>
+<tr style="text-align: left; color: #5B6066; font-size: 12px">
+<th scope="col" style="font-weight: 500; padding: 8px 24px; border-bottom: 1px solid #E3E6E1">Skill</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1">Status</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1">Needs first</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Sources</th>
+<th scope="col" style="font-weight: 500; padding: 8px 24px 8px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Hours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="padding: 12px 24px; border-bottom: 1px solid #E3E6E1"><a href="#s-logline" style="color: #16181A; text-decoration: none; font-weight: 500">Write a logline in one sentence</a></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #E3F1E8; color: #1E6B45">Passed</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; color: #5B6066">—</td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">2</td>
+<td style="padding: 12px 24px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">3.4</td>
+</tr>
+<tr style="background: #F7F8FE">
+<td style="padding: 12px 24px; border-left: 3px solid #2F4BC9"><a href="#s-want" aria-expanded="true" style="color: #16181A; text-decoration: none; font-weight: 600">Want vs. obstacle in a scene</a></td>
+<td style="padding: 12px"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #E8EBFA; color: #1F3399">In progress</span></td>
+<td style="padding: 12px; color: #5B6066">—</td>
+<td style="padding: 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">2</td>
+<td style="padding: 12px 24px 12px 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">2.9</td>
+</tr>
+<tr style="background: #F7F8FE">
+<td colspan="5" style="padding: 4px 24px 20px; border-left: 3px solid #2F4BC9; border-bottom: 1px solid #E3E6E1">
+<div style="display: flex; flex-wrap: wrap; gap: 16px 32px">
+<div style="flex: 2 1 360px; min-width: 0">
+<p style="margin: 0 0 10px; color: #3A3F44">Write a scene where the character wants something and is blocked. Practice: scene text, storyboard or clip.</p>
+<div style="font-size: 13px; font-weight: 600; margin-bottom: 6px">Principles</div>
+<ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px">
+<li>The want is clear by the end of the first beat. <a href="#a41" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">[A · p. 41]</a></li>
+<li>The obstacle actively opposes the want. <a href="#b112" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">[B · p. 112]</a></li>
+<li>Each exchange shifts who has the upper hand. <a href="#b114" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">[B · p. 114]</a></li>
+<li>The scene ends with the want won, lost, or changed. <a href="#a58" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none">[A · p. 58]</a></li>
+</ol>
+<div style="font-size: 13px; color: #5B6066; margin-top: 10px">Unlocks: End a scene on a changed want · Write subtext into a two-person exchange</div>
+</div>
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 8px">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 16px; border-radius: 8px; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none">Continue this skill</a>
+<button type="button" style="height: 44px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Edit name and principles</button>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button type="button" style="height: 44px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Split</button>
+<button type="button" style="height: 44px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Merge with…</button>
+</div>
+<button type="button" style="height: 44px; border-radius: 8px; border: 0; background: transparent; color: #A3261A; font-size: 14px; cursor: pointer">Delete skill</button>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td style="padding: 12px 24px; border-bottom: 1px solid #E3E6E1"><a href="#s-emotion" style="color: #16181A; text-decoration: none; font-weight: 500">Show emotion through action, not dialogue</a></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not started</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; color: #5B6066">—</td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">2</td>
+<td style="padding: 12px 24px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">0</td>
+</tr>
+<tr>
+<td style="padding: 12px 24px; border-bottom: 1px solid #E3E6E1"><a href="#s-ending" style="color: #16181A; text-decoration: none; font-weight: 500">End a scene on a changed want</a></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not started</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; color: #7A4E00">Want vs. obstacle</td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">1</td>
+<td style="padding: 12px 24px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">0</td>
+</tr>
+<tr>
+<td style="padding: 12px 24px"><a href="#s-subtext" style="color: #16181A; text-decoration: none; font-weight: 500">Write subtext into a two-person exchange</a></td>
+<td style="padding: 12px"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not started</span></td>
+<td style="padding: 12px; color: #7A4E00">Want vs. obstacle</td>
+<td style="padding: 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">2</td>
+<td style="padding: 12px 24px 12px 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<button type="button" style="margin: 8px 16px 0; height: 44px; padding: 0 12px; border: 0; background: transparent; color: #2F4BC9; font-size: 14px; cursor: pointer">Show all 18 storytelling skills</button>
+</section>
+
+<section aria-labelledby="d2" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 8px 0 12px">
+<div style="padding: 12px 24px 8px">
+<h2 id="d2" style="margin: 0; font-size: 18px; font-weight: 600">Directing <span style="font-weight: 400; color: #5B6066; font-size: 14px">· 14 skills</span></h2>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px">
+<thead>
+<tr style="text-align: left; color: #5B6066; font-size: 12px">
+<th scope="col" style="font-weight: 500; padding: 8px 24px; border-bottom: 1px solid #E3E6E1">Skill</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1">Status</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1">Needs first</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Sources</th>
+<th scope="col" style="font-weight: 500; padding: 8px 24px 8px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Hours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="padding: 12px 24px; border-bottom: 1px solid #E3E6E1"><a href="#s-shots" style="color: #16181A; text-decoration: none; font-weight: 500">Shot sizes for emotional distance</a></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not started</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; color: #5B6066">—</td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">1</td>
+<td style="padding: 12px 24px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">0</td>
+</tr>
+<tr>
+<td style="padding: 12px 24px"><a href="#s-coverage" style="color: #16181A; text-decoration: none; font-weight: 500">Cover a dialogue scene in 5 shots</a></td>
+<td style="padding: 12px"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not started</span></td>
+<td style="padding: 12px; color: #7A4E00">Shot sizes</td>
+<td style="padding: 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">1</td>
+<td style="padding: 12px 24px 12px 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<button type="button" style="margin: 8px 16px 0; height: 44px; padding: 0 12px; border: 0; background: transparent; color: #2F4BC9; font-size: 14px; cursor: pointer">Show all 14 directing skills</button>
+</section>
+
+<section aria-labelledby="d3" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 8px 0 12px">
+<div style="padding: 12px 24px 8px">
+<h2 id="d3" style="margin: 0; font-size: 18px; font-weight: 600">Editing <span style="font-weight: 400; color: #5B6066; font-size: 14px">· 9 skills</span></h2>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px">
+<thead>
+<tr style="text-align: left; color: #5B6066; font-size: 12px">
+<th scope="col" style="font-weight: 500; padding: 8px 24px; border-bottom: 1px solid #E3E6E1">Skill</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1">Status</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1">Needs first</th>
+<th scope="col" style="font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Sources</th>
+<th scope="col" style="font-weight: 500; padding: 8px 24px 8px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Hours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="padding: 12px 24px"><a href="#s-cut" style="color: #16181A; text-decoration: none; font-weight: 500">Cut on action between two shots</a></td>
+<td style="padding: 12px"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not started</span></td>
+<td style="padding: 12px; color: #5B6066">—</td>
+<td style="padding: 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">1</td>
+<td style="padding: 12px 24px 12px 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<button type="button" style="margin: 8px 16px 0; height: 44px; padding: 0 12px; border: 0; background: transparent; color: #2F4BC9; font-size: 14px; cursor: pointer">Show all 9 editing skills</button>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

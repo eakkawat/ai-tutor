@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup check</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; align-items: center; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8; min-height: 60px; box-sizing: border-box">
+<span style="font-weight: 600; font-size: 16px">Tutor</span>
+</header>
+
+<main style="max-width: 680px; margin: 0 auto; padding: 48px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+<div>
+<h1 style="margin: 0; font-size: 28px; font-weight: 600">Before you start</h1>
+<p style="margin: 6px 0 0; color: #3A3F44">The tutor runs on this computer. It needs a Claude API key, and two local tools for video feedback.</p>
+</div>
+
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+
+<li style="background: #FFFFFF; border: 2px solid #A3261A; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<span style="font-weight: 600">Claude API key</span>
+<span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #FBE4E1; color: #A3261A">Missing · required</span>
+</div>
+<form style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end">
+<div style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 6px">
+<label for="key" style="font-size: 14px">Paste your key</label>
+<input id="key" type="password" autocomplete="off" placeholder="sk-ant-…" style="height: 44px; padding: 0 14px; border: 1px solid #A9AFA8; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; background: #FFFFFF; color: #16181A">
+</div>
+<button type="submit" style="height: 44px; padding: 0 20px; border-radius: 8px; border: 0; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">Save key</button>
+</form>
+<p style="margin: 0; font-size: 13px; color: #5B6066">Stored only on this computer. Used for teaching, quizzes and feedback.</p>
+</li>
+
+<li style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<div>
+<div style="font-weight: 600">ffmpeg</div>
+<div style="font-size: 13px; color: #5B6066">Pulls frames and cuts from video clips</div>
+</div>
+<span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #E3F1E8; color: #1E6B45">Ready</span>
+</li>
+
+<li style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<div>
+<div style="font-weight: 600">Whisper</div>
+<div style="font-size: 13px; color: #5B6066">Transcribes dialogue in video clips</div>
+</div>
+<span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #FBF0D9; color: #7A4E00">Not found · optional</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: #F5F6F4">
+<code style="flex: 1; min-width: 200px; font-family: 'IBM Plex Mono', monospace; font-size: 13px">pip install faster-whisper</code>
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 6px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 13px; cursor: pointer">Copy</button>
+</div>
+<p style="margin: 0; font-size: 13px; color: #5B6066">Without it, video clips are turned off. Text and image practice still work.</p>
+</li>
+</ul>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Check again</button>
+<button type="button" disabled aria-describedby="why" style="height: 44px; padding: 0 22px; border-radius: 8px; border: 0; background: #C9CDC7; color: #3A3F44; font-size: 14px; font-weight: 500">Continue</button>
+</div>
+<p id="why" style="margin: -8px 0 0; text-align: right; font-size: 13px; color: #5B6066">Add your API key to continue.</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

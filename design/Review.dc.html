@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<span style="font-weight: 600; font-size: 16px">Review</span>
+<div style="display: flex; align-items: center; gap: 16px">
+<ol aria-label="Question 2 of 3" style="list-style: none; display: flex; gap: 6px; margin: 0; padding: 0">
+<li style="width: 28px; height: 6px; border-radius: 3px; background: #1E6B45"></li>
+<li style="width: 28px; height: 6px; border-radius: 3px; background: #2F4BC9"></li>
+<li style="width: 28px; height: 6px; border-radius: 3px; background: #D5D9D3"></li>
+</ol>
+<a href="Home.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; font-size: 14px; color: #3A3F44; text-decoration: none">End review</a>
+</div>
+</header>
+
+<main style="max-width: 720px; margin: 0 auto; padding: 56px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; color: #5B6066">
+<span>Write a logline in one sentence · passed 9 days ago</span>
+<span>Question 2 of 3</span>
+</div>
+
+<section aria-labelledby="q" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 16px">
+<label id="q" for="a" style="font-size: 20px; font-weight: 600; line-height: 1.35">A logline names the hero and the goal. What else must it include?</label>
+<textarea id="a" rows="3" style="padding: 12px 14px; border: 1px solid #A9AFA8; border-radius: 8px; font-size: 15px; resize: vertical; background: #FFFFFF; color: #16181A">The genre and the setting</textarea>
+
+<div role="status" style="padding: 12px 16px; border-radius: 8px; background: #FBF0D9; border: 1px solid #E9CF95">
+<div style="font-size: 13px; font-weight: 600; color: #7A4E00">Not quite. Hint</div>
+<p style="margin: 4px 0 0; font-size: 14px; color: #3A2A00">Think about what makes the goal hard to reach.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Show answer</button>
+<button type="button" style="height: 44px; padding: 0 22px; border-radius: 8px; border: 0; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; cursor: pointer">Try again</button>
+</div>
+</section>
+
+<p style="margin: 0; font-size: 13px; color: #5B6066; text-align: center">Missed questions come back sooner. Missing this skill twice moves it back to "needs practice".</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

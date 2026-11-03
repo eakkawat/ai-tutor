@@ -1,0 +1,103 @@
+export type CheckStatus = "ready" | "missing" | "invalid" | "unreachable";
+export type Check = {
+  id: "llm" | "ffmpeg" | "ffprobe" | "whisper"; label: string; purpose: string; required: boolean;
+  status: CheckStatus; fix: string | null; detail: string | null;
+};
+export type SetupStatus = { checks: Check[]; can_continue: boolean; media_enabled: boolean; media_note: string | null };
+export type HomeState = "empty_library" | "no_active_skill" | "active_skill" | "reviews_due";
+export type Home = { state: HomeState; books: number; active_skill: { id: number; name: string; session_id: number | null } | null; reviews_due: number };
+
+export type LlmIn = { base_url: string; model: string; api_key: string };
+
+export type Principle = { id: number; principle: string; test: string; chunk_id: number; citation: string | null };
+export type Skill = {
+  id: number; domain: string; name: string; description: string; practice_type: string | null; status: "active" | "pending" | "archived";
+  merge_into: number | null; merge_note: string | null; learning_status: string; hours: number;
+  principles: Principle[]; sources: { source_id: number; title: string; pages: [number, number] }[];
+  concepts: { id: number; name: string; required_level: string; is_foundation: boolean }[];
+  prerequisites: { id: number; name: string }[];
+  merge?: { target: { id: number; name: string; principles: number }; adds: string[]; text: string };
+};
+export type SkillMap = { domains: { domain: string; skills: Skill[] }[]; pending: number };
+
+export type Project = { id: number; name: string; description: string; good_enough: string; minutes_per_session: number; active: boolean; skills_practised: number };
+export type ProjectIn = { name: string; description: string; good_enough: string; minutes_per_session: number };
+export type PickCard = {
+  id: number; name: string; description: string; practice_type: string | null; domain: string; learning_status: string; hours: number;
+  why: string | null; recommended: boolean; needs: { id: number; name: string }[]; minutes: number;
+  principles: { principle: string; citation: string | null; chunk_id: number }[];
+};
+export type Shortlist = { project: Project; skills: PickCard[]; ranked_by: "tutor" | "similarity"; note: string | null; all_passed: boolean; total_available: number };
+export type ActiveSkill = { id: number; name: string; hours: number; attempt_next: number; session_id: number | null; phase: string | null };
+
+export type Triage = { book_type: string; domain?: string; practicable: boolean; likely_skills: string[]; reason: string };
+export type SourceStatus = "processing" | "ready" | "reference_only" | "needs_ocr" | "error" | "cancelled" | "new";
+export type Source = {
+  id: number; title: string; author: string | null; kind: "single" | "chapters"; pages: number; status: SourceStatus;
+  stage: "extracting" | "chunking" | "embedding" | "triage" | null; progress: number; message: string | null; estimate_s: number | null;
+  triage: Triage | null; chunks: number; files: number; pages_without_text: string[]; skills: number; pending_skills: number;
+};
+export type Passage = {
+  id: number; source_id: number; source_title: string; author: string | null; label: string | null; title: string | null;
+  page_start: number; page_end: number; citation: string; text: string; before: string | null; after: string | null;
+  prev_id: number | null; next_id: number | null;
+};
+
+export class ApiError extends Error {
+  constructor(message: string, public field?: string) { super(message); }
+}
+
+async function upload({ files, title, author }: { files: File[]; title?: string; author?: string }): Promise<{ id: number; skipped: string[] }> {
+  const fd = new FormData();
+  if (title?.trim()) fd.append("title", title.trim());
+  if (author?.trim()) fd.append("author", author.trim());
+  files.forEach((f) => fd.append("files", f));
+  const r = await fetch("/api/library/upload", { method: "POST", body: fd });      // no JSON header: the browser sets the boundary
+  if (!r.ok) {
+    const d = (await r.json().catch(() => ({}))).detail;
+    throw new ApiError(typeof d === "string" ? d : d?.message ?? `Upload failed (${r.status})`, d?.field);
+  }
+  return r.json();
+}
+
+async function call<T>(path: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
+  if (!r.ok) {
+    const body = await r.json().catch(() => ({}));
+    const d = body.detail;
+    throw new ApiError(typeof d === "string" ? d : d?.message ?? `Request failed (${r.status})`, d?.field ?? d?.code);
+  }
+  return (r.status === 204 ? undefined : await r.json()) as T;
+}
+
+export const api = {
+  setupStatus: (verify = false) => call<SetupStatus>(`/api/setup/status?verify=${verify}`),
+  saveLlm: (b: LlmIn) => call<SetupStatus>("/api/setup/llm", { method: "POST", body: JSON.stringify(b) }),
+  home: () => call<Home>("/api/home"),
+  library: () => call<{ sources: Source[] }>("/api/library"),
+  upload,
+  cancel: (id: number) => call<{ ok: true }>(`/api/library/${id}/cancel`, { method: "POST" }),
+  retry: (id: number) => call<{ ok: true }>(`/api/library/${id}/retry`, { method: "POST" }),
+  remove: (id: number) => call<{ ok: true }>(`/api/library/${id}`, { method: "DELETE" }),
+  findSkills: (id: number) => call<{ ok: true }>(`/api/library/${id}/find-skills`, { method: "POST" }),
+  skillMap: () => call<SkillMap>("/api/skills"),
+  pendingSkills: () => call<{ skills: Skill[] }>("/api/skills/pending"),
+  patchSkill: (id: number, body: Partial<Pick<Skill, "name" | "description" | "practice_type">>) => call<Skill>(`/api/skills/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  setPrinciples: (id: number, items: { principle: string; test: string; chunk_id: number }[]) =>
+    call<Skill>(`/api/skills/${id}/principles`, { method: "PUT", body: JSON.stringify(items) }),
+  deleteSkill: (id: number) => call<{ outcome: "deleted" | "archived" | "discarded" }>(`/api/skills/${id}`, { method: "DELETE" }),
+  splitSkill: (id: number, body: { name: string; principle_ids: number[] }) => call<{ new_skill: Skill; skill: Skill }>(`/api/skills/${id}/split`, { method: "POST", body: JSON.stringify(body) }),
+  mergeSkill: (id: number, into: number) => call<{ outcome: string; skill: Skill }>(`/api/skills/${id}/merge`, { method: "POST", body: JSON.stringify({ into }) }),
+  acceptSkill: (id: number) => call<Record<string, number>>(`/api/skills/${id}/accept`, { method: "POST" }),
+  acceptAsNew: (id: number) => call<Record<string, number>>(`/api/skills/${id}/accept-as-new`, { method: "POST" }),
+  skillMode: () => call<{ mode: "auto" | "manual" }>("/api/settings/skill-mode"),
+  setSkillMode: (mode: "auto" | "manual") => call<{ mode: string }>("/api/settings/skill-mode", { method: "PUT", body: JSON.stringify({ mode }) }),
+  projects: () => call<{ projects: Project[]; active: Project | null }>("/api/projects"),
+  createProject: (b: ProjectIn) => call<Project>("/api/projects", { method: "POST", body: JSON.stringify(b) }),
+  activateProject: (id: number) => call<Project>(`/api/projects/${id}/activate`, { method: "POST" }),
+  shortlist: (projectId: number) => call<Shortlist>(`/api/projects/${projectId}/shortlist`, { method: "POST" }),
+  activeSkill: () => call<{ active: ActiveSkill | null }>("/api/active-skill"),
+  startSkill: (skillId: number, projectId: number, pause = false) =>
+    call<{ session_id: number; skill_id: number; phase: string }>(`/api/skills/${skillId}/start`, { method: "POST", body: JSON.stringify({ project_id: projectId, pause_current: pause }) }),
+  passage: (id: number) => call<Passage>(`/api/chunks/${id}`),
+};

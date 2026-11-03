@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Concepts</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 1100px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8">
+<span style="font-weight: 600; font-size: 16px">Tutor</span>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+<a href="Home.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Home</a>
+<a href="SkillMap.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Skill map</a>
+<a href="Concepts.dc.html" aria-current="page" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; background: #E8EBFA; color: #1F3399; font-weight: 600; text-decoration: none">Concepts</a>
+<a href="Library.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Library</a>
+<a href="Progress.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">Progress</a>
+<a href="Profile.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 8px; color: #3A3F44; text-decoration: none">How I learn</a>
+</nav>
+</header>
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 32px 32px 0; box-sizing: border-box">
+<h1 style="margin: 0; font-size: 28px; font-weight: 600">Concepts</h1>
+<p style="margin: 4px 0 0; color: #3A3F44">27 fundamentals from your books. Foundations are used by many skills, so they come first.</p>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 20px">
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 14px 18px"><div style="font-size: 13px; color: #5B6066">Use</div><div style="font-size: 24px; font-weight: 600">4</div></div>
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 14px 18px"><div style="font-size: 13px; color: #5B6066">Spot</div><div style="font-size: 24px; font-weight: 600">3</div></div>
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 14px 18px"><div style="font-size: 13px; color: #5B6066">Define only</div><div style="font-size: 24px; font-weight: 600">2</div></div>
+<div style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 14px 18px"><div style="font-size: 13px; color: #5B6066">Not yet</div><div style="font-size: 24px; font-weight: 600">18</div></div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; padding: 20px 32px 32px; max-width: 1280px; margin: 0 auto; box-sizing: border-box">
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<div role="group" aria-label="Filter concepts" style="display: flex; flex-wrap: wrap; gap: 6px">
+<button type="button" aria-pressed="false" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">All · 27</button>
+<button type="button" aria-pressed="true" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid #2F4BC9; background: #E8EBFA; color: #1F3399; font-size: 14px; font-weight: 600; cursor: pointer">Foundations first</button>
+<button type="button" aria-pressed="false" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C4C8C2; background: #FFFFFF; color: #16181A; font-size: 14px; cursor: pointer">Shaky · 2</button>
+</div>
+<label for="cq" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search concepts</label>
+<input id="cq" type="search" placeholder="Search concepts" style="width: 220px; height: 44px; padding: 0 14px; border: 1px solid #C4C8C2; border-radius: 8px; font-size: 14px; background: #FFFFFF; color: #16181A">
+</div>
+
+<section aria-label="Concept list" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 4px 0 8px">
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px">
+<thead>
+<tr style="text-align: left; color: #5B6066; font-size: 12px">
+<th scope="col" style="font-weight: 500; padding: 10px 20px; border-bottom: 1px solid #E3E6E1">Concept</th>
+<th scope="col" style="font-weight: 500; padding: 10px 12px; border-bottom: 1px solid #E3E6E1">Your level</th>
+<th scope="col" style="font-weight: 500; padding: 10px 20px 10px 12px; border-bottom: 1px solid #E3E6E1; text-align: right">Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1"><a href="#c-want" style="color: #16181A; text-decoration: none; font-weight: 500">Want</a> <span style="font-size: 12px; padding: 1px 8px; border-radius: 6px; border: 1px solid #A9AFA8; color: #3A3F44; margin-left: 6px">Foundation</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #E3F1E8; color: #1E6B45">Use</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">9 skills</td>
+</tr>
+<tr>
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1"><a href="#c-shot" style="color: #16181A; text-decoration: none; font-weight: 500">Shot size</a> <span style="font-size: 12px; padding: 1px 8px; border-radius: 6px; border: 1px solid #A9AFA8; color: #3A3F44; margin-left: 6px">Foundation</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not yet</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">8 skills</td>
+</tr>
+<tr>
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1"><a href="#c-obstacle" style="color: #16181A; text-decoration: none; font-weight: 500">Active obstacle</a> <span style="font-size: 12px; padding: 1px 8px; border-radius: 6px; border: 1px solid #A9AFA8; color: #3A3F44; margin-left: 6px">Foundation</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #E8EBFA; color: #1F3399">Spot</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">7 skills</td>
+</tr>
+<tr>
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1"><a href="#c-reversal" style="color: #16181A; text-decoration: none; font-weight: 500">Reversal</a> <span style="font-size: 12px; padding: 1px 8px; border-radius: 6px; border: 1px solid #A9AFA8; color: #3A3F44; margin-left: 6px">Foundation</span></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #FBF0D9; color: #7A4E00">Define only</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">6 skills</td>
+</tr>
+<tr>
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1"><a href="#c-180" style="color: #16181A; text-decoration: none; font-weight: 500">180° rule</a></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not yet</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">5 skills</td>
+</tr>
+<tr style="background: #F7F8FE">
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1; border-left: 3px solid #2F4BC9">
+<a href="#c-subtext" aria-current="true" style="color: #16181A; text-decoration: none; font-weight: 600">Subtext</a>
+<div style="font-size: 12px; color: #7A4E00; margin-top: 2px">Confused with exposition 2×</div>
+</td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #FBF0D9; color: #7A4E00">Define only</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">4 skills</td>
+</tr>
+<tr>
+<td style="padding: 12px 20px; border-bottom: 1px solid #E3E6E1"><a href="#c-logline" style="color: #16181A; text-decoration: none; font-weight: 500">Logline</a></td>
+<td style="padding: 12px; border-bottom: 1px solid #E3E6E1"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #E3F1E8; color: #1E6B45">Use</span></td>
+<td style="padding: 12px 20px 12px 12px; border-bottom: 1px solid #E3E6E1; text-align: right; font-family: 'IBM Plex Mono', monospace">2 skills</td>
+</tr>
+<tr>
+<td style="padding: 12px 20px"><a href="#c-cut" style="color: #16181A; text-decoration: none; font-weight: 500">Cut on action</a></td>
+<td style="padding: 12px"><span style="font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ECEEEA; color: #3A3F44">Not yet</span></td>
+<td style="padding: 12px 20px 12px 12px; text-align: right; font-family: 'IBM Plex Mono', monospace">2 skills</td>
+</tr>
+</tbody>
+</table>
+</div>
+<button type="button" style="margin: 4px 12px 0; height: 44px; padding: 0 12px; border: 0; background: transparent; color: #2F4BC9; font-size: 14px; cursor: pointer">Show all 27 concepts</button>
+</section>
+</main>
+
+<aside aria-labelledby="cname" style="flex: 1 1 380px; min-width: 0">
+<section style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div>
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6066">Concept</span>
+<h2 id="cname" style="margin: 2px 0 0; font-size: 22px; font-weight: 600">Subtext</h2>
+</div>
+
+<div style="padding: 12px 14px; border-radius: 8px; background: #F5F6F4; font-size: 14px; display: flex; flex-direction: column; gap: 8px">
+<div><strong>Definition.</strong> [Plain-words definition from Book B]</div>
+<div><strong>Film example.</strong> [Example the tutor pulls from your books]</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<a href="Source.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none; padding: 1px 6px; border-radius: 4px; background: #E8EBFA">[B · p. 151]</a>
+<a href="Source.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: none; padding: 1px 6px; border-radius: 4px; background: #E8EBFA">[A · p. 96]</a>
+</div>
+</div>
+
+<div>
+<div style="font-size: 14px; font-weight: 600; margin-bottom: 8px">Your level</div>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+<li style="display: flex; gap: 10px; align-items: flex-start">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #1E6B45"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+<span><strong>Define</strong> · 5 days ago</span>
+</li>
+<li style="display: flex; gap: 10px; align-items: flex-start">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #FBF0D9; border: 1px solid #E9CF95; color: #7A4E00; font-size: 12px; font-weight: 600">2</span>
+<span><strong>Spot</strong> · missed 2 of 3<br><span style="color: #5B6066">You picked lines that explain the conflict out loud. That's exposition, not subtext.</span></span>
+</li>
+<li style="display: flex; gap: 10px; align-items: flex-start">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; border: 1px solid #A9AFA8; font-size: 12px; color: #5B6066">3</span>
+<span><strong>Use</strong> · not yet</span>
+</li>
+</ol>
+</div>
+
+<div>
+<div style="font-size: 14px; font-weight: 600; margin-bottom: 6px">Used by</div>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px">
+<li><a href="SkillMap.dc.html" style="text-decoration: none">Write subtext into a two-person exchange</a> <span style="color: #5B6066">· needs Use</span></li>
+<li><a href="SkillMap.dc.html" style="text-decoration: none">Show emotion through action, not dialogue</a> <span style="color: #5B6066">· needs Spot</span></li>
+<li style="color: #5B6066">+ 2 more</li>
+</ul>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; border-top: 1px solid #E3E6E1">
+<a href="Foundations.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 8px; background: #2F4BC9; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none">Check this concept · 3 min</a>
+<a href="Source.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C4C8C2; color: #16181A; font-size: 14px; text-decoration: none">Open sources</a>
+</div>
+</section>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

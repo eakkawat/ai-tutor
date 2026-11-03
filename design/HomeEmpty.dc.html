@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home — first run</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2F4BC9}a:hover{color:#1F3399}
+button,input,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #F5F6F4; color: #16181A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 8px 32px; background: #FFFFFF; border-bottom: 1px solid #DADDD8; min-height: 60px; box-sizing: border-box">
+<span style="font-weight: 600; font-size: 16px">Tutor</span>
+</header>
+
+<main style="max-width: 720px; margin: 0 auto; padding: 56px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+
+<div>
+<h1 style="margin: 0; font-size: 32px; font-weight: 600; line-height: 1.2">Add your first book</h1>
+<p style="margin: 10px 0 0; font-size: 16px; color: #3A3F44">Your tutor teaches only from the books and courses you add. Start with one book on the skill you want to learn.</p>
+</div>
+
+<section aria-label="Add a book" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<label for="book" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 168px; border: 1.5px dashed #A9AFA8; border-radius: 12px; cursor: pointer; text-align: center; padding: 20px">
+<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" fill="none" stroke="#2F4BC9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span style="font-size: 16px"><strong>Drop a PDF here</strong> or <span style="color: #2F4BC9; text-decoration: underline">choose a file</span></span>
+<span style="font-size: 13px; color: #5B6066">A whole book, or chapter PDFs from your chapter splitter</span>
+</label>
+<input id="book" type="file" accept="application/pdf" multiple style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">
+
+<div>
+<h2 style="margin: 0 0 10px; font-size: 14px; font-weight: 600">What happens next</h2>
+<ol style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+<li style="padding: 14px; border-radius: 10px; background: #F5F6F4">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4BC9; font-weight: 500">1</div>
+<div style="font-size: 14px; margin-top: 2px">The book is read on this computer and split into chapters and pages.</div>
+</li>
+<li style="padding: 14px; border-radius: 10px; background: #F5F6F4">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4BC9; font-weight: 500">2</div>
+<div style="font-size: 14px; margin-top: 2px">It's broken into small skills you can practice, each with its principles.</div>
+</li>
+<li style="padding: 14px; border-radius: 10px; background: #F5F6F4">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4BC9; font-weight: 500">3</div>
+<div style="font-size: 14px; margin-top: 2px">You name a project, pick one skill, and start practicing.</div>
+</li>
+</ol>
+</div>
+</section>
+
+<section aria-labelledby="setup" style="background: #FFFFFF; border: 1px solid #DADDD8; border-radius: 12px; padding: 20px 24px">
+<h2 id="setup" style="margin: 0 0 12px; font-size: 15px; font-weight: 600">Setup check</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+<li style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px"><span>Claude API key</span><span style="color: #1E6B45; font-weight: 500">Connected</span></li>
+<li style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px"><span>ffmpeg (video frames)</span><span style="color: #1E6B45; font-weight: 500">Ready</span></li>
+<li style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 12px; margin: 0 -12px; border-radius: 8px; background: #FBF0D9">
+<span>Whisper (video transcripts)</span>
+<span style="color: #7A4E00; font-weight: 500">Not found · video feedback off · <a href="#install" style="color: #7A4E00">How to install</a></span>
+</li>
+</ul>
+<p style="margin: 12px 0 0; font-size: 13px; color: #5B6066">Text and image practice work now. Everything stays on this computer except prompts sent to Claude.</p>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
