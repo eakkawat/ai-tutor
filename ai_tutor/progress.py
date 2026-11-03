@@ -34,7 +34,7 @@ def build(db: sqlite3.Connection, now: datetime) -> dict:
                        "success_rate": flow.success_rate(db, r["skill_id"])})
     passed = sum(s["status"] == "passed" for s in skills)
     rated = db.execute("SELECT rating_used FROM flow_rating WHERE rating_used IS NOT NULL").fetchall()
-    answered = db.execute("SELECT last_result FROM review_item WHERE last_result IS NOT NULL").fetchall()
+    answered = db.execute("SELECT result FROM review_result WHERE item_id IS NOT NULL").fetchall()
 
     mistakes = []
     for m in db.execute("SELECT m.*, s.name AS skill_name FROM mistake m JOIN skill s ON s.id = m.skill_id ORDER BY m.last_seen_at DESC, m.count DESC LIMIT 12"):
@@ -50,6 +50,6 @@ def build(db: sqlite3.Connection, now: datetime) -> dict:
                         "inferred": bool(r["inferred"]), "changed": what_changed(r), "at": r["created_at"]})
     return {
         "totals": {"practice_hours": round(total, 2), "skills_passed": passed, "just_right": [sum(x["rating_used"] == "just_right" for x in rated), len(rated)],
-                   "reviews_right": [sum(x["last_result"] == "right" for x in answered), len(answered)]},
+                   "reviews_right": [sum(x["result"] == "right" for x in answered), len(answered)]},
         "skills": skills, "mistakes": mistakes, "flow_history": history, "target": hours.TARGET_HOURS,
     }

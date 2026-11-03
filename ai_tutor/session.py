@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 from . import assets as assetlib
 from . import check as chk
 from . import feedback as fbk
-from . import flow, hours, profile
+from . import flow, hours, profile, review
 from . import skills as sk
 from .citations import cite
 from .embeddings import Embedder
@@ -539,6 +539,9 @@ class SessionService:
         self.add_message(r["id"], "user", text, kind="check_answer", phase="check")
         if verdict.correct:
             chk.set_level(self.db, concept["id"], "define" if cur["level"] == "define" else "spot", now)
+            if cur["level"] == "spot":
+                review.ensure_concept_item(self.db, concept["id"], r["skill_id"], now)          # it will come back in a day, mixed in with the rest
+                self.db.commit()
             state["current"] = None
             self.add_message(r["id"], "tutor", verdict.feedback.strip() or "Correct.", kind="check_result", phase="check",
                              meta={"correct": True, "concept": concept["name"], "level": cur["level"]})
@@ -584,18 +587,7 @@ class SessionService:
         self.db.execute("UPDATE session SET phase = 'pass', ended_at = ?, timer_since = NULL WHERE id = ?", (iso(now), r["id"]))
         hours.recompute(self.db, r["skill_id"], now)
         profile.refresh_derived(self.db, now)
-        due = iso(now + REVIEW_FIRST_INTERVAL)
-        skill = sk.skill_detail(self.db, r["skill_id"])
-        self.db.execute("INSERT INTO review_item(skill_id, level, question, answer, due_at) VALUES (?,?,?,?,?)",
-                        (skill["id"], "use", f"What must work on “{skill['name']}” do to pass? Name the principles.",
-                         "; ".join(p["principle"] for p in skill["principles"]), due))
-        for c in skill["concepts"]:
-            q = (self.db.execute("SELECT * FROM concept_question WHERE concept_id = ? AND level = 'spot' LIMIT 1", (c["id"],)).fetchone()
-                 or self.db.execute("SELECT * FROM concept_question WHERE concept_id = ? AND level = 'define' LIMIT 1", (c["id"],)).fetchone())
-            if q:
-                self.db.execute("INSERT INTO review_item(skill_id, concept_id, level, question, answer, due_at) VALUES (?,?,?,?,?,?)",
-                                (skill["id"], c["id"], q["level"], q["prompt"], q["answer_key"], due))
-        self.db.commit()
+        review.create_for_passed_skill(self.db, sk.skill_detail(self.db, r["skill_id"]), now, REVIEW_FIRST_INTERVAL)
 
     # --- questions at any time (D9, D10)
     def _do_ask(self, r, text):

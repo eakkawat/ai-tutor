@@ -20,6 +20,7 @@ from .library_api import router as library_router
 from .media_api import router as media_router
 from .profile_api import router as profile_router
 from .projects_api import router as projects_router
+from .review_api import router as review_router
 from .sessions_api import router as sessions_router
 from .skills_api import router as skills_router
 
@@ -71,6 +72,7 @@ def create_app(
     app.include_router(sessions_router)
     app.include_router(media_router)
     app.include_router(profile_router)
+    app.include_router(review_router)
 
     def status(verify: bool) -> dict:
         return setup_check.summarize(setup_check.check_dependencies(verify=verify, verify_llm=verify_llm, **kw))
@@ -99,7 +101,7 @@ def create_app(
     @app.get("/api/home")
     def home() -> dict:
         db: sqlite3.Connection = app.state.db
-        return home_state(db)
+        return home_state(db, app.state.clock())
 
     return app
 

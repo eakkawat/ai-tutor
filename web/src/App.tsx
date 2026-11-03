@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { api } from "./api";
+import Concepts from "./pages/Concepts";
 import Home from "./pages/Home";
 import Library from "./pages/Library";
 import Picker from "./pages/Picker";
@@ -8,10 +9,10 @@ import Profile from "./pages/Profile";
 import Progress from "./pages/Progress";
 import ProjectForm from "./pages/ProjectForm";
 import Setup from "./pages/Setup";
-import Soon from "./pages/Soon";
 import SkillMap from "./pages/SkillMap";
 import SkillReview from "./pages/SkillReview";
 import Session from "./pages/Session";
+import Review from "./pages/Review";
 import Source from "./pages/Source";
 
 const TABS = [
@@ -58,7 +59,8 @@ export default function App() {
         <Route path="/source/:chunkId" element={<Source />} />
         <Route path="/skills" element={<SkillMap />} />
         <Route path="/skills/review" element={<SkillReview />} />
-        <Route path="/concepts" element={<Soon title="Concepts" />} />
+        <Route path="/concepts" element={<Concepts />} />
+        <Route path="/review" element={<Review />} />
         <Route path="/progress" element={<Progress />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />

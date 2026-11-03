@@ -155,6 +155,10 @@ class SmartBackend:
             job, out = "concept_spot", self._session("concept_spot", user)
         elif "## Phase: Check, a short re-teach" in user:
             job, out = "concept_reteach", self._session("concept_reteach", user)
+        elif "## Phase: Review, judging one answer" in user:
+            job, out = "review_check", self._session("review_check", user)
+        elif "## Phase: Check, a use question" in user:
+            job, out = "concept_use", self._session("concept_use", user)
         elif "## Phase: Adjusting a task" in user:
             job, out = "task_adjust", self._session("task_adjust", user) if "task_adjust" in self.session else {"text": "A made-up piece.", "items": ["First beat", "Second beat", "Third beat"]}
             out = out if isinstance(out, str) else json.dumps(out)

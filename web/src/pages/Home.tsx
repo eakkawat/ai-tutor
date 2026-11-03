@@ -71,8 +71,16 @@ export default function Home() {
       {(h.state === "active_skill" || h.state === "reviews_due") && h.active_skill && (
         <section className="card action stack">
           <h1>{h.active_skill.name}</h1>
-          {h.state === "reviews_due" && <p className="lead">{h.reviews_due} {h.reviews_due === 1 ? "question" : "questions"} to review first.</p>}
-          <Link to={h.active_skill.session_id ? `/session/${h.active_skill.session_id}` : "/new"} className="btn primary" style={{ alignSelf: "flex-start" }}>Continue</Link>
+          {h.review_first && <p className="lead">Two quick review questions first, then back to your work.</p>}
+          <Link to={h.review_first ? `/review?mode=continue${h.active_skill.session_id ? `&session=${h.active_skill.session_id}` : ""}` : h.active_skill.session_id ? `/session/${h.active_skill.session_id}` : "/new"}
+            className="btn primary" style={{ alignSelf: "flex-start" }}>Continue</Link>
+        </section>
+      )}
+      {h.reviews_due > 0 && (
+        <section className="card stack" aria-labelledby="rev-h">
+          <h2 id="rev-h" style={{ fontSize: 15 }}>Review</h2>
+          <p className="small muted" style={{ margin: 0 }}>{h.reviews_due} {h.reviews_due === 1 ? "question is" : "questions are"} due from skills you passed and concepts you checked.</p>
+          <Link to="/review?mode=review" className="btn" style={{ alignSelf: "flex-start" }}>Start review</Link>
         </section>
       )}
       {setup.data && <SetupCheck checks={setup.data.checks} note={setup.data.media_note} />}

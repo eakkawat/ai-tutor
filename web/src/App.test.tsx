@@ -19,7 +19,7 @@ const status = (checks: Check[]): SetupStatus => {
 const OK = status([chk("llm", "ready"), chk("ffmpeg", "ready"), chk("ffprobe", "ready"), chk("whisper", "ready")]);
 const NO_KEY = status([chk("llm", "missing"), chk("ffmpeg", "ready"), chk("ffprobe", "ready"), chk("whisper", "ready")]);
 const NO_WHISPER = status([chk("llm", "ready"), chk("ffmpeg", "ready"), chk("ffprobe", "ready"), chk("whisper", "missing")]);
-const EMPTY: Home = { state: "empty_library", books: 0, active_skill: null, reviews_due: 0 };
+const EMPTY: Home = { state: "empty_library", books: 0, active_skill: null, reviews_due: 0, review_first: false };
 
 function mockApi(routes: Record<string, unknown | ((init?: RequestInit) => Response)>) {
   const f = vi.fn(async (url: string, init?: RequestInit) => {
@@ -101,16 +101,18 @@ describe("home states", () => {
   it("offers Continue with the active skill and the review count", async () => {
     mockApi({
       "/api/setup/status?verify=true": OK,
-      "/api/home": { state: "reviews_due", books: 1, active_skill: { id: 1, name: "Write a want and obstacle scene" }, reviews_due: 2 },
+      "/api/home": { state: "reviews_due", books: 1, active_skill: { id: 1, name: "Write a want and obstacle scene", session_id: 7 }, reviews_due: 2, review_first: true },
     });
     renderApp("/");
     expect(await screen.findByRole("heading", { name: "Write a want and obstacle scene" })).toBeInTheDocument();
-    expect(screen.getByText("2 questions to review first.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Continue" })).toBeInTheDocument();
+    expect(screen.getByText("Two quick review questions first, then back to your work.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue" })).toHaveAttribute("href", "/review?mode=continue&session=7");
+    expect(screen.getByRole("link", { name: "Start review" })).toHaveAttribute("href", "/review?mode=review");
+    expect(screen.getByText(/2 questions are due/)).toBeInTheDocument();
   });
 
   it("offers New skill when nothing is active", async () => {
-    mockApi({ "/api/setup/status?verify=true": OK, "/api/home": { state: "no_active_skill", books: 1, active_skill: null, reviews_due: 0 } });
+    mockApi({ "/api/setup/status?verify=true": OK, "/api/home": { state: "no_active_skill", books: 1, active_skill: null, reviews_due: 0, review_first: false } });
     renderApp("/");
     expect(await screen.findByRole("link", { name: "New skill" })).toBeInTheDocument();
   });

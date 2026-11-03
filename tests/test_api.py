@@ -59,7 +59,9 @@ def test_home_states(make_client):
         db.commit()
         h = c.get("/api/home").json()
         assert h["state"] == "active_skill" and h["active_skill"]["name"].startswith("Write")
-        db.execute("INSERT INTO review_item(skill_id,question,answer,due_at) VALUES (1,'q','a',datetime('now','-1 day'))")
+        db.execute("INSERT INTO skill(domain,name,description) VALUES ('Screenwriting','Cut on action','d')")
+        db.execute("INSERT INTO learner_skill(skill_id,status) VALUES (2,'passed')")
+        db.execute("INSERT INTO review_item(skill_id,question,answer,due_at) VALUES (2,'q','a',datetime('now','-1 day'))")
         db.commit()
         h = c.get("/api/home").json()
         assert h["state"] == "reviews_due" and h["reviews_due"] == 1

@@ -1,5 +1,5 @@
 ---
-version: v1
+version: v2
 ---
 {{persona}}
 
@@ -7,7 +7,7 @@ version: v1
 You are checking one fundamental concept before the learner practices. Judge the **meaning** of the learner's answer, never the wording. Be fair, short and honest.
 
 Concept: {{name}}
-Level being checked: {{level}}   (define = explain it in their own words; spot = pick where it appears)
+Level being checked: {{level}}   (define = explain it in their own words; spot = pick where it appears; use = apply it in a line or two of their own)
 
 ## What the learner's books say it is
 {{definition}}

@@ -5,7 +5,26 @@ export type Check = {
 };
 export type SetupStatus = { checks: Check[]; can_continue: boolean; media_enabled: boolean; media_note: string | null };
 export type HomeState = "empty_library" | "no_active_skill" | "active_skill" | "reviews_due";
-export type Home = { state: HomeState; books: number; active_skill: { id: number; name: string; session_id: number | null } | null; reviews_due: number };
+export type Home = { state: HomeState; books: number; active_skill: { id: number; name: string; session_id: number | null } | null; reviews_due: number; review_first: boolean };
+
+export type ReviewQuestion = {
+  n: number; context: string; level: "define" | "spot" | "use"; kind: "skill" | "concept"; prompt: string; options: string[]; attempts: number; hint: string | null;
+  feedback: string; correct: boolean; finished: boolean; first: "right" | "wrong" | null; answer: string | null; citations: { citation: string; chunk_id: number }[];
+};
+export type ReviewSummary = {
+  right: number; wrong: number; rows: { context: string; result: "right" | "wrong"; when: string | null; dropped_to: string | null }[];
+  notes: string[]; level: string | null; skipped: number;
+};
+export type ReviewRun = {
+  id: number; mode: "continue" | "review" | "concept"; session_id: number | null; concept_id: number | null; total: number; answered: number;
+  ended: boolean; current: ReviewQuestion | null; summary: ReviewSummary | null;
+};
+export type ConceptRow = { id: number; name: string; is_foundation: boolean; level: "none" | "define" | "spot" | "use"; skills: number; confused_with: string | null; confusion_count: number };
+export type ConceptDetail = {
+  id: number; name: string; definition: string; example: string; is_foundation: boolean; level: ConceptRow["level"]; last_checked_at: string | null;
+  confusions: { with: string; count: number }[]; sources: { chunk_id: number; citation: string }[]; skills: { id: number; name: string; required_level: "spot" | "use" }[];
+  questions: Record<"define" | "spot" | "use", number>;
+};
 
 export type LlmIn = { base_url: string; model: string; api_key: string };
 
@@ -142,6 +161,15 @@ export const api = {
   setupStatus: (verify = false) => call<SetupStatus>(`/api/setup/status?verify=${verify}`),
   saveLlm: (b: LlmIn) => call<SetupStatus>("/api/setup/llm", { method: "POST", body: JSON.stringify(b) }),
   home: () => call<Home>("/api/home"),
+  reviewStart: (mode: ReviewRun["mode"], opts: { sessionId?: number; conceptId?: number } = {}) =>
+    call<{ run: ReviewRun | null }>("/api/review/start", { method: "POST", body: JSON.stringify({ mode, session_id: opts.sessionId ?? null, concept_id: opts.conceptId ?? null }) }),
+  reviewAnswer: (id: number, text: string) => call<ReviewRun>(`/api/review/${id}/answer`, { method: "POST", body: JSON.stringify({ text }) }),
+  reviewHint: (id: number) => call<ReviewRun>(`/api/review/${id}/hint`, { method: "POST" }),
+  reviewShow: (id: number) => call<ReviewRun>(`/api/review/${id}/show`, { method: "POST" }),
+  reviewNext: (id: number) => call<ReviewRun>(`/api/review/${id}/next`, { method: "POST" }),
+  reviewEnd: (id: number) => call<ReviewRun>(`/api/review/${id}/end`, { method: "POST" }),
+  concepts: () => call<{ concepts: ConceptRow[] }>("/api/concepts"),
+  concept: (id: number) => call<ConceptDetail>(`/api/concepts/${id}`),
   library: () => call<{ sources: Source[] }>("/api/library"),
   upload,
   cancel: (id: number) => call<{ ok: true }>(`/api/library/${id}/cancel`, { method: "POST" }),

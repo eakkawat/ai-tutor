@@ -306,20 +306,26 @@ LEVEL_ORDER = {"none": 0, "define": 1, "spot": 2, "use": 3}
 
 def concept_list(db: sqlite3.Connection) -> list[dict]:
     rows = db.execute(
-        "SELECT c.id, c.name, c.is_foundation, COALESCE(m.level, 'none') AS level, "
+        "SELECT c.id, c.name, c.is_foundation, COALESCE(m.level, 'none') AS level, m.confusions_json, "
         "(SELECT COUNT(DISTINCT sc.skill_id) FROM skill_concept sc JOIN skill s ON s.id = sc.skill_id WHERE sc.concept_id = c.id AND s.status = 'active') AS skills "
         "FROM concept c LEFT JOIN concept_mastery m ON m.concept_id = c.id ORDER BY c.is_foundation DESC, skills DESC, c.name").fetchall()
-    return [dict(r, is_foundation=bool(r["is_foundation"])) for r in rows]
+    out = []
+    for r in rows:
+        confusions = json.loads(r["confusions_json"]) if r["confusions_json"] else []
+        top = max(confusions, key=lambda x: x["count"]) if confusions else None
+        out.append({"id": r["id"], "name": r["name"], "is_foundation": bool(r["is_foundation"]), "level": r["level"], "skills": r["skills"],
+                    "confused_with": top["with"] if top else None, "confusion_count": top["count"] if top else 0})
+    return out
 
 
 def concept_detail(db: sqlite3.Connection, concept_id: int) -> dict:
     c = db.execute("SELECT * FROM concept WHERE id = ?", (concept_id,)).fetchone()
     if c is None:
         raise SkillError("This concept no longer exists.")
-    m = db.execute("SELECT level, confusions_json FROM concept_mastery WHERE concept_id = ?", (concept_id,)).fetchone()
+    m = db.execute("SELECT level, confusions_json, last_checked_at FROM concept_mastery WHERE concept_id = ?", (concept_id,)).fetchone()
     return {
         "id": c["id"], "name": c["name"], "definition": c["definition"], "example": c["example"], "is_foundation": bool(c["is_foundation"]),
-        "level": m["level"] if m else "none", "confusions": json.loads(m["confusions_json"]) if m and m["confusions_json"] else [],
+        "level": m["level"] if m else "none", "last_checked_at": m["last_checked_at"] if m else None, "confusions": json.loads(m["confusions_json"]) if m and m["confusions_json"] else [],
         "sources": [x for x in (citation_row(db, r["chunk_id"]) for r in db.execute("SELECT chunk_id FROM concept_source WHERE concept_id = ?", (concept_id,))) if x],
         "skills": [{"id": r["id"], "name": r["name"], "required_level": r["required_level"]} for r in db.execute(
             "SELECT s.id, s.name, sc.required_level FROM skill_concept sc JOIN skill s ON s.id = sc.skill_id WHERE sc.concept_id = ? AND s.status = 'active' ORDER BY s.name", (concept_id,))],
